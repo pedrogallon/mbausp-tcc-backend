@@ -1,0 +1,15 @@
+app:
+  mode: event
+
+spring:
+  cloud:
+    aws:
+      sqs:
+        enabled: true
+
+aws:
+  sqs:
+    queue-url: https://sqs.sa-east-1.amazonaws.com/046311955936/processing-queue-2
+    queue-name: processing-queue-2
+  dynamodb:
+    table-name: processing-event-table

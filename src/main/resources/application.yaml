@@ -1,0 +1,26 @@
+spring:
+  application:
+    name: backend-request-service
+  profiles:
+    active: request
+logging:
+  pattern:
+    console: "%d{HH:mm:ss} %clr(%5p){cyan} %clr(%c{1}){magenta} - %m%n"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  metrics:
+    export:
+      cloudwatch:
+        enabled: true
+        namespace: BackendRequest
+        step: 1m
+
+aws:
+  region: sa-east-1
+
+app:
+  mode: request

@@ -1,0 +1,6 @@
+app:
+  mode: request
+
+aws:
+  dynamodb:
+    table-name: processing-event-table
