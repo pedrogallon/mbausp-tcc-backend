@@ -1,6 +1,6 @@
 spring:
   application:
-    name: backend-request-service
+    name: backend
   profiles:
     active: request
 logging:

@@ -5,7 +5,7 @@ plugins {
 }
 
 group = 'br.com.pedrogallonalves'
-version = '0.0.1-SNAPSHOT'
+version = '1.0.0'
 
 java {
     toolchain {
@@ -20,25 +20,32 @@ repositories {
 dependencies {
 
     implementation platform("software.amazon.awssdk:bom:2.27.0")
-
-    implementation 'org.springframework.boot:spring-boot-starter-actuator'
-    implementation 'org.springframework.boot:spring-boot-starter-opentelemetry'
     implementation 'org.springframework.boot:spring-boot-starter-webmvc'
-    compileOnly 'org.projectlombok:lombok'
-    runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
-    annotationProcessor 'org.projectlombok:lombok'
-    testImplementation 'org.springframework.boot:spring-boot-starter-opentelemetry-test'
-    testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
-    testCompileOnly 'org.projectlombok:lombok'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-    testAnnotationProcessor 'org.projectlombok:lombok'
+
+    // AWS
     implementation 'software.amazon.awssdk:dynamodb'
     implementation 'software.amazon.awssdk:dynamodb-enhanced'
-    implementation 'io.micrometer:micrometer-registry-cloudwatch2:1.13.0'
     implementation 'software.amazon.awssdk:auth'
     implementation 'software.amazon.awssdk:regions'
     implementation 'software.amazon.awssdk:sqs'
     implementation "io.awspring.cloud:spring-cloud-aws-starter-sqs:4.0.2"
+
+    // Observability
+    implementation 'io.micrometer:micrometer-registry-cloudwatch2:1.13.0'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-starter-opentelemetry'
+    runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
+
+    // Lombok
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+
+    // Test
+    testImplementation 'org.springframework.boot:spring-boot-starter-opentelemetry-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    testAnnotationProcessor 'org.projectlombok:lombok'
+    testCompileOnly 'org.projectlombok:lombok'
 
 }
 

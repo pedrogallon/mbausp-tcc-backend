@@ -5,6 +5,12 @@ RUN ./gradlew build -x test
 
 FROM eclipse-temurin:25-jre-jammy
 WORKDIR /app
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends curl && \
+    rm -rf /var/lib/apt/lists/*
+
 COPY --from=builder /app/build/libs/*.jar app.jar
 EXPOSE 8080
+ENV AWS_REGION=sa-east-1
 ENTRYPOINT ["java", "-jar", "app.jar"]

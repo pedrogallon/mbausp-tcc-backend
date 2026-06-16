@@ -3,6 +3,7 @@ package br.com.pedrogallonalves.tccmba.backend.event.producer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import software.amazon.awssdk.services.sqs.SqsClient;
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
@@ -11,6 +12,7 @@ import software.amazon.awssdk.services.sqs.model.SendMessageResponse;
 @Slf4j
 @Component
 @RequiredArgsConstructor
+@ConditionalOnProperty(name = "app.mode", havingValue = "event", matchIfMissing = false)
 public class SqsProducer {
 
     private final SqsClient sqsClient;
