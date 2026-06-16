@@ -34,18 +34,14 @@ public class ProcessingService {
 
         return timer.record(() -> {
             try {
-                // Create new request
                 ProcessingRequest request = ProcessingRequest.newRequest(inputData);
 
-                // Simulate 1-second processing
                 Thread.sleep(1000);
 
-                // Process data
                 request.setResult("Processed: " + inputData.toUpperCase());
                 request.setStatus("COMPLETED");
                 request.setProcessedAt(LocalDateTime.now());
 
-                // Save to DynamoDB
                 saveRequestToDynamoDB(request);
 
                 meterRegistry.counter("backend.request.processed.success").increment();
