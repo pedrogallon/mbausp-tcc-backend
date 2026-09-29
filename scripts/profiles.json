@@ -1,0 +1,72 @@
+{
+  "profiles": {
+    "steady": {
+      "description": "Steady load: constant 100 req/s for 30 minutes",
+      "duration_seconds": 3600,
+      "target_rps": 100,
+      "requests_per_batch": 100,
+      "batch_interval_seconds": 1,
+      "concurrency": 20,
+      "timeout": 30,
+      "http": {
+        "enabled": true,
+        "endpoint": "http://lb-3-663571516.sa-east-1.elb.amazonaws.com/api/v1/process"
+      },
+      "sqs": {
+        "enabled": true,
+        "queue_url": "https://sqs.sa-east-1.amazonaws.com/046311955936/processing-queue-2"
+      }
+    },
+    "spike": {
+      "description": "Spike load: burst of 1000 req/s for 10 minutes",
+      "duration_seconds": 600,
+      "target_rps": 1000,
+      "requests_per_batch": 1000,
+      "batch_interval_seconds": 1,
+      "concurrency": 100,
+      "timeout": 30,
+      "http": {
+        "enabled": true,
+        "endpoint": "http://lb-3-663571516.sa-east-1.elb.amazonaws.com/api/v1/process"
+      },
+      "sqs": {
+        "enabled": true,
+        "queue_url": "https://sqs.sa-east-1.amazonaws.com/046311955936/processing-queue-2"
+      }
+    },
+    "long": {
+      "description": "Long-run load: constant 50 req/s for 1 hour",
+      "duration_seconds": 3600,
+      "target_rps": 50,
+      "requests_per_batch": 50,
+      "batch_interval_seconds": 1,
+      "concurrency": 15,
+      "timeout": 30,
+      "http": {
+        "enabled": true,
+        "endpoint": "http://lb-3-663571516.sa-east-1.elb.amazonaws.com/api/v1/process"
+      },
+      "sqs": {
+        "enabled": true,
+        "queue_url": "https://sqs.sa-east-1.amazonaws.com/046311955936/processing-queue-2"
+      }
+    },
+    "test": {
+      "description": "Test load",
+      "duration_seconds": 600,
+      "target_rps": 50,
+      "requests_per_batch": 50,
+      "batch_interval_seconds": 1,
+      "concurrency": 20,
+      "timeout": 30,
+      "http": {
+        "enabled": true,
+        "endpoint": "http://lb-3-663571516.sa-east-1.elb.amazonaws.com/api/v1/process"
+      },
+      "sqs": {
+        "enabled": true,
+        "queue_url": "https://sqs.sa-east-1.amazonaws.com/046311955936/processing-queue-2"
+      }
+    }
+  }
+}
