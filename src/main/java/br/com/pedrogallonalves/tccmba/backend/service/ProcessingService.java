@@ -24,12 +24,15 @@ public class ProcessingService {
     @Value("${aws.dynamodb.table-name}")
     private String TABLE_NAME;
 
-    public ProcessingRequest processRequest(String inputData) {
-        log.info("Starting processing for input: {}", inputData);
+    public ProcessingRequest processRequest(String inputData, String source) {
+        log.info("Starting processing for input: {} (source={})", inputData, source);
 
-        Timer timer = Timer.builder("backend.request.processing.duration")
-                .description("Time taken to process a request")
+        meterRegistry.counter(String.format("tcc.%s.processed.total", source)).increment();
+
+        Timer timer = Timer.builder(String.format("tcc.%s.processing.time", source))
+                .description("Time taken to process a request/event")
                 .publishPercentiles(0.5, 0.95, 0.99)
+                .publishPercentileHistogram(true)
                 .register(meterRegistry);
 
         return timer.record(() -> {
@@ -44,17 +47,17 @@ public class ProcessingService {
 
                 saveRequestToDynamoDB(request);
 
-                meterRegistry.counter("backend.request.processed.success").increment();
-                log.info("Request processed successfully: {}", request.getRequestId());
+                meterRegistry.counter(String.format("tcc.%s.processed.success", source)).increment();
+                log.info("Request processed successfully: {} (source={})", request.getRequestId(), source);
 
                 return request;
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-                meterRegistry.counter("backend.request.processed.error").increment();
+                meterRegistry.counter(String.format("tcc.%s.processed.error", source)).increment();
                 log.error("Processing interrupted", e);
                 throw new RuntimeException("Processing interrupted", e);
             } catch (Exception e) {
-                meterRegistry.counter("backend.request.processed.error").increment();
+                meterRegistry.counter(String.format("tcc.%s.processed.error", source)).increment();
                 log.error("Error processing request", e);
                 throw new RuntimeException("Error processing request", e);
             }

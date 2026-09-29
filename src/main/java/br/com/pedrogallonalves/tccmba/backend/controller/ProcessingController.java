@@ -21,7 +21,7 @@ public class ProcessingController {
     @PostMapping("/process")
     public ResponseEntity<ProcessingRequest> processRequest(@RequestBody String data) {
         log.info("Received processing request with data: {}", data);
-        ProcessingRequest result = processingService.processRequest(data);
+        ProcessingRequest result = processingService.processRequest(data, "requests");
         return ResponseEntity.status(HttpStatus.CREATED).body(result);
     }
 

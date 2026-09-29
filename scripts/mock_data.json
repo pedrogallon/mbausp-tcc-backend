@@ -1,0 +1,85 @@
+{
+  "version": "1.0.0",
+  "requestId": "req-12345-67890-abcdef",
+  "timestamp": "2026-09-27T14:30:45.123Z",
+  "userId": "user-98765-fedcba",
+  "orderId": "order-55555-77777",
+  "processType": "FULL_PROCESSING",
+  "priority": "HIGH",
+  "metadata": {
+    "source": "API_GATEWAY",
+    "correlationId": "corr-1111-2222-3333",
+    "traceId": "trace-aaaa-bbbb-cccc-dddd",
+    "sessionId": "sess-xxxx-yyyy-zzzz",
+    "clientIp": "192.168.1.100",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+  },
+  "payload": {
+    "items": [
+      {
+        "itemId": "item-001",
+        "name": "Laptop Pro 15",
+        "description": "High-performance laptop suitable for business use.",
+        "quantity": 5,
+        "price": 1299.99,
+        "sku": "SKU-A-001-PROD",
+        "category": "Electronics",
+        "attributes": {
+          "color": "Silver",
+          "weight": "2.5kg",
+          "dimensions": "30cm x 20cm x 15cm",
+          "warranty": "3 years"
+        }
+      },
+      {
+        "itemId": "item-002",
+        "name": "Analytics Suite",
+        "description": "Software for reporting and data analysis.",
+        "quantity": 3,
+        "price": 2599.99,
+        "sku": "SKU-B-002-PROD",
+        "category": "Software",
+        "attributes": {
+          "licenseType": "Enterprise",
+          "users": "unlimited",
+          "deploymentType": "Cloud"
+        }
+      },
+      {
+        "itemId": "item-003",
+        "name": "Cloud Hosting",
+        "description": "Managed cloud services with backup and security.",
+        "quantity": 10,
+        "price": 4999.99,
+        "sku": "SKU-C-003-PROD",
+        "category": "Services",
+        "attributes": {
+          "region": "sa-east-1",
+          "availability": "99.99% uptime SLA"
+        }
+      }
+    ],
+    "shippingAddress": {
+      "street": "Av. Paulista, 1000",
+      "city": "São Paulo",
+      "state": "SP",
+      "postalCode": "01311-100",
+      "country": "Brazil"
+    },
+    "billingAddress": {
+      "street": "Rua Augusta, 2500",
+      "city": "São Paulo",
+      "state": "SP",
+      "postalCode": "01305-100",
+      "country": "Brazil"
+    }
+  },
+  "customFields": {
+    "invoiceNumber": "INV-2026-000012345",
+    "poNumber": "PO-2026-987654",
+    "departmentCode": "DEPT-SALES-001",
+    "costCenter": "CC-5000-REVENUE",
+    "projectCode": "PROJ-INTERNAL-2026",
+    "approvalStatus": "PENDING_REVIEW"
+  }
+}

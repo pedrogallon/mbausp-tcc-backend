@@ -13,6 +13,13 @@ management:
       exposure:
         include: health,info,metrics,prometheus
   metrics:
+    distribution:
+      percentiles:
+        tcc.requests.processing.time: 0.5,0.95,0.99
+        tcc.events.processing.time: 0.5,0.95,0.99
+      percentile-histogram:
+        tcc.requests.processing.time: true
+        tcc.events.processing.time: true
     export:
       cloudwatch:
         enabled: true
