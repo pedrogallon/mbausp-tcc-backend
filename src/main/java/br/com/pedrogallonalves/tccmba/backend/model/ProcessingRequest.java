@@ -21,6 +21,7 @@ public class ProcessingRequest {
     private String status;
     private String data;
     private String result;
+    private String source;
     private LocalDateTime createdAt;
     private LocalDateTime processedAt;
 
@@ -29,10 +30,11 @@ public class ProcessingRequest {
         return requestId;
     }
 
-    public static ProcessingRequest newRequest(String data) {
+    public static ProcessingRequest newRequest(String data, String source) {
         return ProcessingRequest.builder()
                 .requestId(UUID.randomUUID().toString())
                 .status("PENDING")
+                .source(source)
                 .data(data)
                 .createdAt(LocalDateTime.now())
                 .build();

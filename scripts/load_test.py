@@ -8,13 +8,23 @@ from pathlib import Path
 
 import boto3
 import requests
-from botocore.exceptions import ClientError
+from botocore.exceptions import ClientError, NoCredentialsError
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
 ROOT_DIR = Path(__file__).resolve().parent
 PROFILES_FILE = ROOT_DIR / "profiles.json"
 JSON_FILE = ROOT_DIR / "mock_data.json"
+
+
+def ensure_aws_credentials_ready():
+    session = boto3.Session()
+    credentials = session.get_credentials()
+    if credentials is None:
+        raise RuntimeError(
+            "AWS credentials not found. Run 'aws login' or export AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY before starting the load test."
+        )
+    return credentials
 
 
 class LoadTester:
@@ -24,7 +34,7 @@ class LoadTester:
         self.payload = json.loads(JSON_FILE.read_text(encoding="utf-8"))
         self.duration_seconds = int(profile["duration_seconds"])
         self.target_rps = int(profile["target_rps"])
-        self.concurrency = int(profile["concurrency"])
+        self.concurrency = self.target_rps
         self.timeout = int(profile["timeout"])
         self.lock = threading.Lock()
         self.stop_flag = False
@@ -38,6 +48,8 @@ class LoadTester:
             "status_codes": {},
             "error_messages": [],
         }
+
+        ensure_aws_credentials_ready()
 
         if kind == "request":
             self.endpoint_url = profile["http"]["endpoint"]
@@ -83,14 +95,17 @@ class LoadTester:
                     )
         except requests.exceptions.Timeout:
             with self.lock:
+                self.results["total_items"] += 1
                 self.results["failed_items"] += 1
                 self.results["error_messages"].append(f"Request {index}: TIMEOUT")
         except requests.exceptions.RequestException as exc:
             with self.lock:
+                self.results["total_items"] += 1
                 self.results["failed_items"] += 1
                 self.results["error_messages"].append(f"Request {index}: {exc}")
         except Exception as exc:  # pragma: no cover
             with self.lock:
+                self.results["total_items"] += 1
                 self.results["failed_items"] += 1
                 self.results["error_messages"].append(f"Request {index}: {exc}")
 
@@ -123,12 +138,14 @@ class LoadTester:
                     pass
         except ClientError as exc:
             with self.lock:
+                self.results["total_items"] += 1
                 self.results["failed_items"] += 1
                 self.results["error_messages"].append(
                     f"Event {index}: {exc.response['Error']['Code']} - {exc.response['Error']['Message']}"
                 )
         except Exception as exc:  # pragma: no cover
             with self.lock:
+                self.results["total_items"] += 1
                 self.results["failed_items"] += 1
                 self.results["error_messages"].append(f"Event {index}: {exc}")
 
@@ -137,6 +154,35 @@ class LoadTester:
             self._send_request(index)
         else:
             self._send_event(index)
+
+    def _snapshot_metrics(self):
+        with self.lock:
+            total = self.results["total_items"]
+            successful = self.results["successful_items"]
+            failed = self.results["failed_items"]
+            latencies = list(self.results["latencies"])
+            status_codes = dict(self.results["status_codes"])
+            return total, successful, failed, latencies, status_codes
+
+    def _log_progress(self, elapsed_seconds: float, next_log_seconds: float):
+        total, successful, failed, latencies, status_codes = self._snapshot_metrics()
+        throughput = (total / elapsed_seconds) if elapsed_seconds > 0 else 0.0
+        if latencies:
+            p95 = sorted(latencies)[max(0, int(len(latencies) * 0.95) - 1)]
+        else:
+            p95 = 0.0
+
+        if self.kind == "request":
+            kind_label = "request"
+        else:
+            kind_label = "event"
+
+        print(
+            f"[{datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')}Z] "
+            f"progress {kind_label}: elapsed={elapsed_seconds:.0f}s / {next_log_seconds:.0f}s, "
+            f"total={total}, success={successful}, failed={failed}, "
+            f"throughput={throughput:.2f} items/s, p95={p95:.3f}s, status={status_codes}"
+        )
 
     def run(self):
         label = "HTTP" if self.kind == "request" else "SQS"
@@ -154,12 +200,14 @@ class LoadTester:
         print(f"Concurrency: {self.concurrency}")
         print(f"Payload size: {len(json.dumps(self.payload)) / 1024:.2f} KB")
         print(f"Expected total: ~{self.target_rps * self.duration_seconds}")
+        print("Progress logs will be emitted every 5 minutes.")
         print(f"{'=' * 72}\n")
 
         start_time = time.time()
         end_time = start_time + self.duration_seconds
         index = 0
         threads = []
+        next_log_checkpoint = 300
 
         while time.time() < end_time and not self.stop_flag:
             batch_start = time.time()
@@ -179,10 +227,17 @@ class LoadTester:
             if batch_elapsed < 1.0:
                 time.sleep(1.0 - batch_elapsed)
 
+            elapsed_seconds = time.time() - start_time
+            if elapsed_seconds >= next_log_checkpoint:
+                self._log_progress(elapsed_seconds, next_log_checkpoint)
+                next_log_checkpoint += 300
+
         for thread in threads:
             thread.join()
 
         total_elapsed = time.time() - start_time
+        self._log_progress(total_elapsed, self.duration_seconds)
+
         latencies = self.results["latencies"]
         if latencies:
             avg_latency = sum(latencies) / len(latencies)
@@ -233,7 +288,7 @@ def parse_args():
     )
     parser.add_argument(
         "--profile",
-        choices=["steady", "spike", "long"],
+        choices=["steady", "spike", "long", "test"],
         required=True,
         help="Load profile: steady, spike, or long",
     )
@@ -243,23 +298,25 @@ def parse_args():
 def main():
     args = parse_args()
 
-    if not PROFILES_FILE.exists():
-        raise FileNotFoundError(f"Profiles file not found: {PROFILES_FILE}")
-    if not JSON_FILE.exists():
-        raise FileNotFoundError(f"JSON payload file not found: {JSON_FILE}")
+    try:
+        if not PROFILES_FILE.exists():
+            raise FileNotFoundError(f"Profiles file not found: {PROFILES_FILE}")
+        if not JSON_FILE.exists():
+            raise FileNotFoundError(f"JSON payload file not found: {JSON_FILE}")
 
-    with PROFILES_FILE.open("r", encoding="utf-8") as fh:
-        profiles = json.load(fh)
+        with PROFILES_FILE.open("r", encoding="utf-8") as fh:
+            profiles = json.load(fh)
 
-    profile_name = args.profile
-    if profile_name not in profiles["profiles"]:
-        raise KeyError(f"Profile '{profile_name}' not found in {PROFILES_FILE}")
+        profile_name = args.profile
+        if profile_name not in profiles["profiles"]:
+            raise KeyError(f"Profile '{profile_name}' not found in {PROFILES_FILE}")
 
-    profile = profiles["profiles"][profile_name]
-    tester = LoadTester(kind=args.kind, profile=profile)
-    tester.run()
+        profile = profiles["profiles"][profile_name]
+        tester = LoadTester(kind=args.kind, profile=profile)
+        tester.run()
+    except (RuntimeError, FileNotFoundError, KeyError) as exc:
+        raise SystemExit(f"ERROR: {exc}")
 
 
 if __name__ == "__main__":
     main()
-

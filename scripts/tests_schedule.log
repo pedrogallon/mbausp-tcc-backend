@@ -1,0 +1,527 @@
+[2026-10-02 00:44:55] ======================================================================
+[2026-10-02 00:44:55] PREFLIGHT CHECKS
+[2026-10-02 00:44:55] ======================================================================
+[2026-10-02 00:45:45] ======================================================================
+[2026-10-02 00:45:45] PREFLIGHT CHECKS
+[2026-10-02 00:45:45] ======================================================================
+[2026-10-02 00:45:45] [OK] load_test.py found
+[2026-10-02 00:45:45] [OK] profiles.json found
+[2026-10-02 00:45:45] [OK] mock_data.json found
+[2026-10-02 00:45:45] [OK] Profile 'steady' defined
+[2026-10-02 00:45:45] [OK] Profile 'spike' defined
+[2026-10-02 00:45:45] [OK] Profile 'long' defined
+[2026-10-02 00:45:46] [OK] Python dependencies (requests, boto3) available
+[2026-10-02 00:45:46] 
+[2026-10-02 00:45:46] [OK] All preflight checks passed
+
+[2026-10-02 00:45:46] ======================================================================
+[2026-10-02 00:45:46] LOAD TEST SCHEDULE STARTED
+[2026-10-02 00:45:46] ======================================================================
+[2026-10-02 00:45:46] Current time: 00:45:46
+[2026-10-02 00:45:46] Script location: D:\pedro\MBA USP\TCC\works\backend-request\scripts\load_test.py
+[2026-10-02 00:45:46] Log file: D:\pedro\MBA USP\TCC\works\backend-request\scripts\tests_schedule.log
+[2026-10-02 00:45:46] 
+[2026-10-02 00:45:46] Scheduled tests:
+[2026-10-02 00:45:46]   01:00 - request steady  (expect 1800s)
+[2026-10-02 00:45:46]   02:00 - event   steady  (expect 1800s)
+[2026-10-02 00:45:46]   03:00 - request spike   (expect 300s)
+[2026-10-02 00:45:46]   04:00 - event   spike   (expect 300s)
+[2026-10-02 00:45:46]   05:00 - request long    (expect 1800s)
+[2026-10-02 00:45:46]   07:00 - event   long    (expect 1800s)
+[2026-10-02 00:45:46] 
+[2026-10-02 00:45:46] 
+[1/6] Waiting for 01:00...
+[2026-10-02 00:47:10] 
+
+[WARN] Scheduler interrupted by user
+[2026-10-02 00:47:10] 
+======================================================================
+[2026-10-02 00:47:10] TEST SUMMARY
+[2026-10-02 00:47:10] ======================================================================
+[2026-10-02 00:47:10] 
+Results: 0/0 PASSED
+[2026-10-02 00:47:10] 
+Total duration: 0.0s (0m 0s)
+[2026-10-02 00:47:10] Started: 2026-10-02 00:45:46
+[2026-10-02 00:47:10] Ended: 2026-10-02 00:47:10
+[2026-10-02 00:47:10] 
+Detailed results:
+[2026-10-02 00:47:10] ======================================================================
+[2026-10-02 00:47:57] ======================================================================
+[2026-10-02 00:47:57] PREFLIGHT CHECKS
+[2026-10-02 00:47:57] ======================================================================
+[2026-10-02 00:47:57] [OK] load_test.py found
+[2026-10-02 00:47:57] [OK] profiles.json found
+[2026-10-02 00:47:57] [OK] mock_data.json found
+[2026-10-02 00:47:57] [OK] Profile 'steady' defined
+[2026-10-02 00:47:57] [OK] Profile 'spike' defined
+[2026-10-02 00:47:57] [OK] Profile 'long' defined
+[2026-10-02 00:47:57] [OK] Python dependencies (requests, boto3) available
+[2026-10-02 00:47:57] 
+[2026-10-02 00:47:57] [OK] All preflight checks passed
+
+[2026-10-02 00:47:57] ======================================================================
+[2026-10-02 00:47:57] LOAD TEST SCHEDULE STARTED
+[2026-10-02 00:47:57] ======================================================================
+[2026-10-02 00:47:57] Current time: 00:47:57
+[2026-10-02 00:47:57] Script location: D:\pedro\MBA USP\TCC\works\backend-request\scripts\load_test.py
+[2026-10-02 00:47:57] Log file: D:\pedro\MBA USP\TCC\works\backend-request\scripts\tests_schedule.log
+[2026-10-02 00:47:57] 
+[2026-10-02 00:47:57] Scheduled tests:
+[2026-10-02 00:47:57]   01:00 - request steady  (expect 1800s)
+[2026-10-02 00:47:57]   02:00 - event   steady  (expect 1800s)
+[2026-10-02 00:47:57]   03:00 - request spike   (expect 300s)
+[2026-10-02 00:47:57]   04:00 - event   spike   (expect 300s)
+[2026-10-02 00:47:57]   05:00 - request long    (expect 1800s)
+[2026-10-02 00:47:57]   07:00 - event   long    (expect 1800s)
+[2026-10-02 00:47:57] 
+[2026-10-02 00:47:57] 
+[1/6] Waiting for 01:00...
+[2026-10-02 00:59:27]   [WAIT] 33s until start
+[2026-10-02 00:59:37]   [WAIT] 23s until start
+[2026-10-02 00:59:47]   [WAIT] 13s until start
+[2026-10-02 00:59:57]   [WAIT] 3s until start
+[2026-10-02 01:00:00] [WARN] Test started 0.0m late
+[2026-10-02 01:00:00] Starting test at 01:00:00
+[2026-10-02 01:00:00] Running: --type request --profile steady
+[2026-10-02 01:30:02] [PASS] request steady in 1802.0s
+[2026-10-02 01:30:02] 
+[2/6] Waiting for 02:00...
+[2026-10-02 01:59:02]   [WAIT] 58s until start
+[2026-10-02 01:59:12]   [WAIT] 48s until start
+[2026-10-02 01:59:22]   [WAIT] 38s until start
+[2026-10-02 01:59:32]   [WAIT] 28s until start
+[2026-10-02 01:59:42]   [WAIT] 18s until start
+[2026-10-02 01:59:52]   [WAIT] 8s until start
+[2026-10-02 02:00:00] [WARN] Test started 0.0m late
+[2026-10-02 02:00:00] Starting test at 02:00:00
+[2026-10-02 02:00:00] Running: --type event --profile steady
+[2026-10-02 02:30:16] [PASS] event steady in 1815.8s
+[2026-10-02 02:30:16] 
+[3/6] Waiting for 03:00...
+[2026-10-02 02:59:16]   [WAIT] 44s until start
+[2026-10-02 02:59:26]   [WAIT] 34s until start
+[2026-10-02 02:59:36]   [WAIT] 24s until start
+[2026-10-02 02:59:46]   [WAIT] 14s until start
+[2026-10-02 02:59:56]   [WAIT] 4s until start
+[2026-10-02 03:00:00] [WARN] Test started 0.0m late
+[2026-10-02 03:00:00] Starting test at 03:00:00
+[2026-10-02 03:00:00] Running: --type request --profile spike
+[2026-10-02 03:10:02] [PASS] request spike in 601.8s
+[2026-10-02 03:10:02] 
+[4/6] Waiting for 04:00...
+[2026-10-02 03:59:02]   [WAIT] 58s until start
+[2026-10-02 03:59:12]   [WAIT] 48s until start
+[2026-10-02 03:59:22]   [WAIT] 38s until start
+[2026-10-02 03:59:32]   [WAIT] 28s until start
+[2026-10-02 03:59:42]   [WAIT] 18s until start
+[2026-10-02 03:59:52]   [WAIT] 8s until start
+[2026-10-02 04:00:00] [WARN] Test started 0.0m late
+[2026-10-02 04:00:00] Starting test at 04:00:00
+[2026-10-02 04:00:00] Running: --type event --profile spike
+[2026-10-02 04:10:38] [PASS] event spike in 638.1s
+[2026-10-02 04:10:38] 
+[5/6] Waiting for 05:00...
+[2026-10-02 04:59:08]   [WAIT] 52s until start
+[2026-10-02 04:59:18]   [WAIT] 42s until start
+[2026-10-02 04:59:28]   [WAIT] 32s until start
+[2026-10-02 04:59:38]   [WAIT] 22s until start
+[2026-10-02 04:59:48]   [WAIT] 12s until start
+[2026-10-02 04:59:58]   [WAIT] 2s until start
+[2026-10-02 05:00:00] [WARN] Test started 0.0m late
+[2026-10-02 05:00:00] Starting test at 05:00:00
+[2026-10-02 05:00:00] Running: --type request --profile long
+[2026-10-02 05:40:00] [TIMEOUT] request long exceeded 2400s limit
+[2026-10-02 05:40:00] 
+[6/6] Waiting for 07:00...
+[2026-10-02 06:59:00]   [WAIT] 60s until start
+[2026-10-02 06:59:10]   [WAIT] 50s until start
+[2026-10-02 06:59:20]   [WAIT] 40s until start
+[2026-10-02 06:59:30]   [WAIT] 30s until start
+[2026-10-02 06:59:40]   [WAIT] 20s until start
+[2026-10-02 06:59:50]   [WAIT] 10s until start
+[2026-10-02 07:00:00] [WARN] Test started 0.0m late
+[2026-10-02 07:00:00] Starting test at 07:00:00
+[2026-10-02 07:00:00] Running: --type event --profile long
+[2026-10-02 07:40:00] [TIMEOUT] event long exceeded 2400s limit
+[2026-10-02 07:40:00] 
+======================================================================
+[2026-10-02 07:40:00] TEST SUMMARY
+[2026-10-02 07:40:00] ======================================================================
+[2026-10-02 07:40:00] 
+Results: 4/6 PASSED
+[2026-10-02 07:40:00]          2 TIMEOUT
+[2026-10-02 07:40:00] 
+Total duration: 9657.7s (160.0m 57s)
+[2026-10-02 07:40:00] Started: 2026-10-02 00:47:57
+[2026-10-02 07:40:00] Ended: 2026-10-02 07:40:00
+[2026-10-02 07:40:00] 
+Detailed results:
+[2026-10-02 07:40:00]   [PASS] request steady            PASSED  (1802.0s)
+[2026-10-02 07:40:00]   [PASS] event steady              PASSED  (1815.8s)
+[2026-10-02 07:40:00]   [PASS] request spike             PASSED  (601.8s)
+[2026-10-02 07:40:00]   [PASS] event spike               PASSED  (638.1s)
+[2026-10-02 07:40:00]   [FAIL] request long              TIMEOUT (2400.0s)
+[2026-10-02 07:40:00]   [FAIL] event long                TIMEOUT (2400.0s)
+[2026-10-02 07:40:00] ======================================================================
+[2026-10-03 16:55:55] ======================================================================
+[2026-10-03 16:55:55] PREFLIGHT CHECKS
+[2026-10-03 16:55:55] ======================================================================
+[2026-10-03 16:55:55] [OK] load_test.py found
+[2026-10-03 16:55:55] [OK] profiles.json found
+[2026-10-03 16:55:55] [OK] mock_data.json found
+[2026-10-03 16:55:55] [OK] Profile 'steady' defined
+[2026-10-03 16:55:55] [OK] Profile 'spike' defined
+[2026-10-03 16:55:55] [OK] Profile 'long' defined
+[2026-10-03 16:55:56] [OK] Python dependencies (requests, boto3) available
+[2026-10-03 16:55:56] 
+[2026-10-03 16:55:56] [OK] All preflight checks passed
+
+[2026-10-03 16:55:56] ======================================================================
+[2026-10-03 16:55:56] LOAD TEST SCHEDULE STARTED
+[2026-10-03 16:55:56] ======================================================================
+[2026-10-03 16:55:56] Current time: 16:55:56
+[2026-10-03 16:55:56] Script location: D:\pedro\MBA USP\TCC\works\backend-request\scripts\load_test.py
+[2026-10-03 16:55:56] Log file: D:\pedro\MBA USP\TCC\works\backend-request\scripts\tests_schedule.log
+[2026-10-03 16:55:56] 
+[2026-10-03 16:55:56] Scheduled tests:
+[2026-10-03 16:55:56]   17:00 - request steady  (expect 1800s)
+[2026-10-03 16:55:56]   17:30 - event   steady  (expect 1800s)
+[2026-10-03 16:55:56]   18:00 - request spike   (expect 300s)
+[2026-10-03 16:55:56]   18:30 - event   spike   (expect 300s)
+[2026-10-03 16:55:56]   19:00 - request long    (expect 3600s)
+[2026-10-03 16:55:56]   20:00 - event   long    (expect 3600s)
+[2026-10-03 16:55:56] 
+[2026-10-03 16:55:56] 
+[1/6] Waiting for 17:00...
+[2026-10-03 16:57:12] 
+
+[WARN] Scheduler interrupted by user
+[2026-10-03 16:57:12] 
+======================================================================
+[2026-10-03 16:57:12] TEST SUMMARY
+[2026-10-03 16:57:12] ======================================================================
+[2026-10-03 16:57:12] 
+Results: 0/0 PASSED
+[2026-10-03 16:57:12] 
+Total duration: 0.0s (0m 0s)
+[2026-10-03 16:57:12] Started: 2026-10-03 16:55:56
+[2026-10-03 16:57:12] Ended: 2026-10-03 16:57:12
+[2026-10-03 16:57:12] 
+Detailed results:
+[2026-10-03 16:57:12] ======================================================================
+[2026-10-03 17:00:59] ======================================================================
+[2026-10-03 17:00:59] PREFLIGHT CHECKS
+[2026-10-03 17:00:59] ======================================================================
+[2026-10-03 17:00:59] [OK] load_test.py found
+[2026-10-03 17:00:59] [OK] profiles.json found
+[2026-10-03 17:00:59] [OK] mock_data.json found
+[2026-10-03 17:00:59] [OK] Profile 'steady' defined
+[2026-10-03 17:00:59] [OK] Profile 'spike' defined
+[2026-10-03 17:00:59] [OK] Profile 'long' defined
+[2026-10-03 17:00:59] [OK] Python dependencies (requests, boto3) available
+[2026-10-03 17:00:59] 
+[2026-10-03 17:00:59] [OK] All preflight checks passed
+
+[2026-10-03 17:00:59] ======================================================================
+[2026-10-03 17:00:59] LOAD TEST SCHEDULE STARTED
+[2026-10-03 17:00:59] ======================================================================
+[2026-10-03 17:00:59] Current time: 17:00:59
+[2026-10-03 17:00:59] Script location: D:\pedro\MBA USP\TCC\works\backend-request\scripts\load_test.py
+[2026-10-03 17:00:59] Log file: D:\pedro\MBA USP\TCC\works\backend-request\scripts\tests_schedule.log
+[2026-10-03 17:00:59] 
+[2026-10-03 17:00:59] Scheduled tests:
+[2026-10-03 17:00:59]   17:05 - request steady  (expect 1800s)
+[2026-10-03 17:00:59]   17:05 - event   steady  (expect 1800s)
+[2026-10-03 17:00:59]   17:45 - request spike   (expect 300s)
+[2026-10-03 17:00:59]   17:45 - event   spike   (expect 300s)
+[2026-10-03 17:00:59]   18:10 - request long    (expect 3600s)
+[2026-10-03 17:00:59]   18:10 - event   long    (expect 3600s)
+[2026-10-03 17:00:59] 
+[2026-10-03 17:00:59] 
+Waiting for batch at 17:05...
+[2026-10-03 17:04:29]   [WAIT] 31s until start
+[2026-10-03 17:04:35] 
+
+[WARN] Scheduler interrupted by user
+[2026-10-03 17:04:35] 
+======================================================================
+[2026-10-03 17:04:35] TEST SUMMARY
+[2026-10-03 17:04:35] ======================================================================
+[2026-10-03 17:04:35] 
+Results: 0/0 PASSED
+[2026-10-03 17:04:35] 
+Total duration: 0.0s (0m 0s)
+[2026-10-03 17:04:35] Started: 2026-10-03 17:00:59
+[2026-10-03 17:04:35] Ended: 2026-10-03 17:04:35
+[2026-10-03 17:04:35] 
+Detailed results:
+[2026-10-03 17:04:35] ======================================================================
+[2026-10-03 17:04:36] ======================================================================
+[2026-10-03 17:04:36] PREFLIGHT CHECKS
+[2026-10-03 17:04:36] ======================================================================
+[2026-10-03 17:04:36] [OK] load_test.py found
+[2026-10-03 17:04:36] [OK] profiles.json found
+[2026-10-03 17:04:36] [OK] mock_data.json found
+[2026-10-03 17:04:36] [OK] Profile 'steady' defined
+[2026-10-03 17:04:36] [OK] Profile 'spike' defined
+[2026-10-03 17:04:36] [OK] Profile 'long' defined
+[2026-10-03 17:04:37] [OK] Python dependencies (requests, boto3) available
+[2026-10-03 17:04:37] 
+[2026-10-03 17:04:37] [OK] All preflight checks passed
+
+[2026-10-03 17:04:37] ======================================================================
+[2026-10-03 17:04:37] LOAD TEST SCHEDULE STARTED
+[2026-10-03 17:04:37] ======================================================================
+[2026-10-03 17:04:37] Current time: 17:04:37
+[2026-10-03 17:04:37] Script location: D:\pedro\MBA USP\TCC\works\backend-request\scripts\load_test.py
+[2026-10-03 17:04:37] Log file: D:\pedro\MBA USP\TCC\works\backend-request\scripts\tests_schedule.log
+[2026-10-03 17:04:37] 
+[2026-10-03 17:04:37] Scheduled tests:
+[2026-10-03 17:04:37]   17:05 - request steady  (expect 1800s)
+[2026-10-03 17:04:37]   17:05 - event   steady  (expect 1800s)
+[2026-10-03 17:04:37]   17:45 - request spike   (expect 300s)
+[2026-10-03 17:04:37]   17:45 - event   spike   (expect 300s)
+[2026-10-03 17:04:37]   18:10 - request long    (expect 3600s)
+[2026-10-03 17:04:37]   18:10 - event   long    (expect 3600s)
+[2026-10-03 17:04:37] 
+[2026-10-03 17:04:37] 
+Waiting for batch at 17:05...
+[2026-10-03 17:04:37]   [WAIT] 23s until start
+[2026-10-03 17:04:47]   [WAIT] 13s until start
+[2026-10-03 17:04:57]   [WAIT] 3s until start
+[2026-10-03 17:05:00] [WARN] Batch started 0.0m late
+[2026-10-03 17:05:00] Starting batch at 17:05:00
+[2026-10-03 17:05:00] Starting parallel test: --type request --profile steady
+[2026-10-03 17:05:00] Starting parallel test: --type event --profile steady
+[2026-10-03 17:12:53] 
+
+[WARN] Scheduler interrupted by user
+[2026-10-03 17:12:53] 
+======================================================================
+[2026-10-03 17:12:53] TEST SUMMARY
+[2026-10-03 17:12:53] ======================================================================
+[2026-10-03 17:12:53] 
+Results: 0/0 PASSED
+[2026-10-03 17:12:53] 
+Total duration: 0.0s (0m 0s)
+[2026-10-03 17:12:53] Started: 2026-10-03 17:04:37
+[2026-10-03 17:12:53] Ended: 2026-10-03 17:12:53
+[2026-10-03 17:12:53] 
+Detailed results:
+[2026-10-03 17:12:53] ======================================================================
+[2026-10-03 18:04:44] ======================================================================
+[2026-10-03 18:04:45] PREFLIGHT CHECKS
+[2026-10-03 18:04:45] ======================================================================
+[2026-10-03 18:04:45] [OK] load_test.py found
+[2026-10-03 18:04:45] [OK] profiles.json found
+[2026-10-03 18:04:45] [OK] mock_data.json found
+[2026-10-03 18:04:45] [OK] Profile 'steady' defined
+[2026-10-03 18:04:45] [OK] Profile 'spike' defined
+[2026-10-03 18:04:45] [OK] Profile 'long' defined
+[2026-10-03 18:04:46] [OK] Python dependencies (requests, boto3) available
+[2026-10-03 18:04:46] 
+[2026-10-03 18:04:46] [OK] All preflight checks passed
+
+[2026-10-03 18:04:46] ======================================================================
+[2026-10-03 18:04:46] LOAD TEST SCHEDULE STARTED
+[2026-10-03 18:04:46] ======================================================================
+[2026-10-03 18:04:46] Current time: 18:04:46
+[2026-10-03 18:04:46] Script location: D:\pedro\MBA USP\TCC\works\backend-request\scripts\load_test.py
+[2026-10-03 18:04:46] Log file: D:\pedro\MBA USP\TCC\works\backend-request\scripts\tests_schedule.log
+[2026-10-03 18:04:46] 
+[2026-10-03 18:04:46] Scheduled tests:
+[2026-10-03 18:04:46]   18:05 - request steady  (expect 1200s)
+[2026-10-03 18:04:46]   18:05 - event   steady  (expect 1200s)
+[2026-10-03 18:04:46]   18:30 - request spike   (expect 200s)
+[2026-10-03 18:04:46]   18:30 - event   spike   (expect 200s)
+[2026-10-03 18:04:46]   18:45 - request long    (expect 2400s)
+[2026-10-03 18:04:46]   18:45 - event   long    (expect 2400s)
+[2026-10-03 18:04:46] 
+[2026-10-03 18:04:46] 
+Waiting for batch at 18:05...
+[2026-10-03 18:04:46]   [WAIT] 14s until start
+[2026-10-03 18:04:56]   [WAIT] 4s until start
+[2026-10-03 18:05:00] [WARN] Batch started 0.0m late
+[2026-10-03 18:05:00] Starting batch at 18:05:00
+[2026-10-03 18:05:00] Starting parallel test: --type request --profile steady
+[2026-10-03 18:05:01] Starting parallel test: --type event --profile steady
+[2026-10-03 18:20:08] 
+
+[WARN] Scheduler interrupted by user
+[2026-10-03 18:20:08] 
+======================================================================
+[2026-10-03 18:20:08] TEST SUMMARY
+[2026-10-03 18:20:08] ======================================================================
+[2026-10-03 18:20:08] 
+Results: 0/0 PASSED
+[2026-10-03 18:20:08] 
+Total duration: 0.0s (0m 0s)
+[2026-10-03 18:20:08] Started: 2026-10-03 18:04:46
+[2026-10-03 18:20:08] Ended: 2026-10-03 18:20:08
+[2026-10-03 18:20:08] 
+Detailed results:
+[2026-10-03 18:20:08] ======================================================================
+[2026-10-03 18:20:56] ======================================================================
+[2026-10-03 18:20:56] PREFLIGHT CHECKS
+[2026-10-03 18:20:56] ======================================================================
+[2026-10-03 18:20:56] [OK] load_test.py found
+[2026-10-03 18:20:56] [OK] profiles.json found
+[2026-10-03 18:20:56] [OK] mock_data.json found
+[2026-10-03 18:20:56] [OK] Profile 'steady' defined
+[2026-10-03 18:20:56] [OK] Profile 'spike' defined
+[2026-10-03 18:20:56] [OK] Profile 'long' defined
+[2026-10-03 18:20:56] [OK] Python dependencies (requests, boto3) available
+[2026-10-03 18:20:56] 
+[2026-10-03 18:20:56] [OK] All preflight checks passed
+
+[2026-10-03 18:20:56] ======================================================================
+[2026-10-03 18:20:56] LOAD TEST SCHEDULE STARTED
+[2026-10-03 18:20:56] ======================================================================
+[2026-10-03 18:20:56] Current time: 18:20:56
+[2026-10-03 18:20:56] Script location: D:\pedro\MBA USP\TCC\works\backend-request\scripts\load_test.py
+[2026-10-03 18:20:56] Log file: D:\pedro\MBA USP\TCC\works\backend-request\scripts\tests_schedule.log
+[2026-10-03 18:20:56] 
+[2026-10-03 18:20:56] Scheduled tests:
+[2026-10-03 18:20:56]   18:25 - request steady  (expect 1200s)
+[2026-10-03 18:20:56]   18:25 - event   steady  (expect 1200s)
+[2026-10-03 18:20:56]   18:50 - request spike   (expect 200s)
+[2026-10-03 18:20:56]   18:50 - event   spike   (expect 200s)
+[2026-10-03 18:20:56]   19:10 - request long    (expect 2400s)
+[2026-10-03 18:20:56]   19:10 - event   long    (expect 2400s)
+[2026-10-03 18:20:56] 
+[2026-10-03 18:20:56] 
+Waiting for batch at 18:25...
+[2026-10-03 18:21:04] 
+
+[WARN] Scheduler interrupted by user
+[2026-10-03 18:21:04] 
+======================================================================
+[2026-10-03 18:21:04] TEST SUMMARY
+[2026-10-03 18:21:04] ======================================================================
+[2026-10-03 18:21:04] 
+Results: 0/0 PASSED
+[2026-10-03 18:21:04] 
+Total duration: 0.0s (0m 0s)
+[2026-10-03 18:21:04] Started: 2026-10-03 18:20:56
+[2026-10-03 18:21:04] Ended: 2026-10-03 18:21:04
+[2026-10-03 18:21:04] 
+Detailed results:
+[2026-10-03 18:21:04] ======================================================================
+[2026-10-03 18:21:12] ======================================================================
+[2026-10-03 18:21:12] PREFLIGHT CHECKS
+[2026-10-03 18:21:12] ======================================================================
+[2026-10-03 18:21:12] [OK] load_test.py found
+[2026-10-03 18:21:12] [OK] profiles.json found
+[2026-10-03 18:21:12] [OK] mock_data.json found
+[2026-10-03 18:21:12] [OK] Profile 'steady' defined
+[2026-10-03 18:21:12] [OK] Profile 'spike' defined
+[2026-10-03 18:21:12] [OK] Profile 'long' defined
+[2026-10-03 18:21:13] [OK] Python dependencies (requests, boto3) available
+[2026-10-03 18:21:13] 
+[2026-10-03 18:21:13] [OK] All preflight checks passed
+
+[2026-10-03 18:21:13] ======================================================================
+[2026-10-03 18:21:13] LOAD TEST SCHEDULE STARTED
+[2026-10-03 18:21:13] ======================================================================
+[2026-10-03 18:21:13] Current time: 18:21:13
+[2026-10-03 18:21:13] Script location: D:\pedro\MBA USP\TCC\works\backend-request\scripts\load_test.py
+[2026-10-03 18:21:13] Log file: D:\pedro\MBA USP\TCC\works\backend-request\scripts\tests_schedule.log
+[2026-10-03 18:21:13] 
+[2026-10-03 18:21:13] Scheduled tests:
+[2026-10-03 18:21:13]   18:22 - request steady  (expect 1200s)
+[2026-10-03 18:21:13]   18:22 - event   steady  (expect 1200s)
+[2026-10-03 18:21:13]   18:50 - request spike   (expect 200s)
+[2026-10-03 18:21:13]   18:50 - event   spike   (expect 200s)
+[2026-10-03 18:21:13]   19:10 - request long    (expect 2400s)
+[2026-10-03 18:21:13]   19:10 - event   long    (expect 2400s)
+[2026-10-03 18:21:13] 
+[2026-10-03 18:21:13] 
+Waiting for batch at 18:22...
+[2026-10-03 18:21:13]   [WAIT] 47s until start
+[2026-10-03 18:21:23]   [WAIT] 37s until start
+[2026-10-03 18:21:33]   [WAIT] 27s until start
+[2026-10-03 18:21:43]   [WAIT] 17s until start
+[2026-10-03 18:21:53]   [WAIT] 7s until start
+[2026-10-03 18:22:00] [WARN] Batch started 0.0m late
+[2026-10-03 18:22:00] Starting batch at 18:22:00
+[2026-10-03 18:22:00] Starting parallel test: --type request --profile steady
+[2026-10-03 18:22:00] Starting parallel test: --type event --profile steady
+[2026-10-03 18:22:28] 
+
+[WARN] Scheduler interrupted by user
+[2026-10-03 18:22:28] 
+======================================================================
+[2026-10-03 18:22:28] TEST SUMMARY
+[2026-10-03 18:22:28] ======================================================================
+[2026-10-03 18:22:28] 
+Results: 0/0 PASSED
+[2026-10-03 18:22:28] 
+Total duration: 0.0s (0m 0s)
+[2026-10-03 18:22:28] Started: 2026-10-03 18:21:13
+[2026-10-03 18:22:28] Ended: 2026-10-03 18:22:28
+[2026-10-03 18:22:28] 
+Detailed results:
+[2026-10-03 18:22:28] ======================================================================
+[2026-10-03 18:37:06] ======================================================================
+[2026-10-03 18:37:06] PREFLIGHT CHECKS
+[2026-10-03 18:37:06] ======================================================================
+[2026-10-03 18:37:06] [OK] load_test.py found
+[2026-10-03 18:37:06] [OK] profiles.json found
+[2026-10-03 18:37:06] [OK] mock_data.json found
+[2026-10-03 18:37:06] [OK] Profile 'steady' defined
+[2026-10-03 18:37:06] [OK] Profile 'spike' defined
+[2026-10-03 18:37:06] [OK] Profile 'long' defined
+[2026-10-03 18:37:07] [OK] Python dependencies (requests, boto3) available
+[2026-10-03 18:37:07] 
+[2026-10-03 18:37:07] [OK] All preflight checks passed
+
+[2026-10-03 18:37:07] ======================================================================
+[2026-10-03 18:37:07] LOAD TEST SCHEDULE STARTED
+[2026-10-03 18:37:07] ======================================================================
+[2026-10-03 18:37:07] Current time: 18:37:07
+[2026-10-03 18:37:07] Script location: D:\pedro\MBA USP\TCC\works\backend-request\scripts\load_test.py
+[2026-10-03 18:37:07] Log file: D:\pedro\MBA USP\TCC\works\backend-request\scripts\tests_schedule.log
+[2026-10-03 18:37:07] 
+[2026-10-03 18:37:07] Scheduled tests:
+[2026-10-03 18:37:07]   18:40 - request steady  (expect 1200s)
+[2026-10-03 18:37:07]   18:40 - event   steady  (expect 1200s)
+[2026-10-03 18:37:07]   19:05 - request spike   (expect 200s)
+[2026-10-03 18:37:07]   19:05 - event   spike   (expect 200s)
+[2026-10-03 18:37:07]   19:20 - request long    (expect 2400s)
+[2026-10-03 18:37:07]   19:20 - event   long    (expect 2400s)
+[2026-10-03 18:37:07] 
+[2026-10-03 18:37:07] 
+Waiting for batch at 18:40...
+[2026-10-03 18:39:07]   [WAIT] 53s until start
+[2026-10-03 18:39:17]   [WAIT] 43s until start
+[2026-10-03 18:39:27]   [WAIT] 33s until start
+[2026-10-03 18:39:37]   [WAIT] 23s until start
+[2026-10-03 18:39:47]   [WAIT] 13s until start
+[2026-10-03 18:39:57]   [WAIT] 3s until start
+[2026-10-03 18:40:00] [WARN] Batch started 0.0m late
+[2026-10-03 18:40:00] Starting batch at 18:40:00
+[2026-10-03 18:40:00] Starting parallel test: --type request --profile steady
+[2026-10-03 18:40:00] Starting parallel test: --type event --profile steady
+[2026-10-03 19:00:06] [PASS] request steady in batch
+[2026-10-03 19:00:06] [PASS] event steady in batch
+[2026-10-03 19:00:06] 
+Waiting for batch at 19:05...
+[2026-10-03 19:01:44] 
+
+[WARN] Scheduler interrupted by user
+[2026-10-03 19:01:44] 
+======================================================================
+[2026-10-03 19:01:44] TEST SUMMARY
+[2026-10-03 19:01:44] ======================================================================
+[2026-10-03 19:01:44] 
+Results: 2/2 PASSED
+[2026-10-03 19:01:44] 
+Total duration: 3600.0s (60m 0s)
+[2026-10-03 19:01:44] Started: 2026-10-03 18:37:07
+[2026-10-03 19:01:44] Ended: 2026-10-03 19:01:44
+[2026-10-03 19:01:44] 
+Detailed results:
+[2026-10-03 19:01:44]   [PASS] request steady            PASSED  (1800.0s)
+[2026-10-03 19:01:44]   [PASS] event steady              PASSED  (1800.0s)
+[2026-10-03 19:01:44] ======================================================================

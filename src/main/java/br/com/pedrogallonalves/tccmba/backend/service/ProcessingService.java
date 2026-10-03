@@ -11,7 +11,12 @@ import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import java.util.Random;
 
 @Slf4j
 @Service
@@ -20,6 +25,8 @@ public class ProcessingService {
 
     private final DynamoDbClient dynamoDbClient;
     private final MeterRegistry meterRegistry;
+    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final Random random = new Random();
 
     @Value("${aws.dynamodb.table-name}")
     private String TABLE_NAME;
@@ -37,9 +44,9 @@ public class ProcessingService {
 
         return timer.record(() -> {
             try {
-                ProcessingRequest request = ProcessingRequest.newRequest(inputData);
+                ProcessingRequest request = ProcessingRequest.newRequest(inputData, source);
 
-                Thread.sleep(1000);
+                simulateCpuWork(inputData, source);
 
                 request.setResult("Processed: " + inputData.toUpperCase());
                 request.setStatus("COMPLETED");
@@ -51,17 +58,56 @@ public class ProcessingService {
                 log.info("Request processed successfully: {} (source={})", request.getRequestId(), source);
 
                 return request;
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                meterRegistry.counter(String.format("tcc.%s.processed.error", source)).increment();
-                log.error("Processing interrupted", e);
-                throw new RuntimeException("Processing interrupted", e);
             } catch (Exception e) {
                 meterRegistry.counter(String.format("tcc.%s.processed.error", source)).increment();
                 log.error("Error processing request", e);
                 throw new RuntimeException("Error processing request", e);
             }
         });
+    }
+
+    private void simulateCpuWork(String inputData, String source) {
+        int iterations = 1000;
+        for (int i = 0; i < iterations; i++) {
+            String json = buildJsonPayload(inputData, source, i);
+            try {
+                JsonNode node = objectMapper.readTree(json);
+                String normalized = objectMapper.writeValueAsString(node);
+                if (normalized.length() > 0 && normalized.charAt(0) == '{') {
+                    int checksum = normalized.hashCode();
+                    if ((checksum & 1) == 0) {
+                        normalized = normalized.toUpperCase();
+                    }
+                }
+            } catch (JsonProcessingException ignored) {
+                // CPU-bound JSON work only; no external I/O
+            }
+        }
+    }
+
+    private String buildJsonPayload(String inputData, String source, int index) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("{\"source\":\"").append(source)
+                .append("\",\"index\":").append(index)
+                .append(",\"payload\":\"").append(inputData)
+                .append("\",\"checksum\":\"").append(Integer.toHexString(Math.abs(random.nextInt())))
+                .append("\",\"nested\":{");
+
+        for (int i = 0; i < 14; i++) {
+            sb.append("\"k").append(i).append("\":\"")
+                    .append(new String(randomBytes(64), StandardCharsets.UTF_8))
+                    .append("\",");
+        }
+        sb.append("\"final\":\"").append(inputData.toUpperCase()).append("\"}} ");
+        return sb.toString();
+    }
+
+    private byte[] randomBytes(int length) {
+        byte[] bytes = new byte[length];
+        for (int i = 0; i < length; i++) {
+            bytes[i] = (byte) (random.nextInt(26) + 'a');
+        }
+        return bytes;
     }
 
     private void saveRequestToDynamoDB(ProcessingRequest request) {
