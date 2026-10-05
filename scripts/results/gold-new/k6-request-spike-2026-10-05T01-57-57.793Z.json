@@ -1,0 +1,17 @@
+{
+  "kind": "request",
+  "profile": "spike",
+  "target_rps": 800,
+  "ramp_up": "30s",
+  "duration": "5m",
+  "start_time": "2026-10-04T22:57:57-03:00",
+  "end_time": "2026-10-04T22:57:57-03:00",
+  "avg_ms": 871.2163849268037,
+  "p50_ms": 1121.0251,
+  "p95_ms": 1817.7814,
+  "p99_ms": 2195.5171800000016,
+  "failed_rate": 0.34342518658338195,
+  "failed_count": 82965,
+  "total_requests": 241581,
+  "throughput_req_s": 700.2229082489139
+}

@@ -14,9 +14,9 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
-import java.util.Random;
+import java.util.Iterator;
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -26,13 +26,18 @@ public class ProcessingService {
     private final DynamoDbClient dynamoDbClient;
     private final MeterRegistry meterRegistry;
     private final ObjectMapper objectMapper = new ObjectMapper();
-    private final Random random = new Random();
 
     @Value("${aws.dynamodb.table-name}")
     private String TABLE_NAME;
 
+    @Value("${app.processing.cpu-passes:5}")
+    private int cpuPasses;
+
+    @Value("${app.processing.enrichment-rounds:80}")
+    private int enrichmentRounds;
+
     public ProcessingRequest processRequest(String inputData, String source) {
-        log.info("Starting processing for input: {} (source={})", inputData, source);
+        log.debug("Starting processing (source={}, bytes={})", source, inputData != null ? inputData.length() : 0);
 
         meterRegistry.counter(String.format("tcc.%s.processed.total", source)).increment();
 
@@ -46,16 +51,16 @@ public class ProcessingService {
             try {
                 ProcessingRequest request = ProcessingRequest.newRequest(inputData, source);
 
-                simulateCpuWork(inputData, source);
+                String fingerprint = simulateBusinessWork(inputData, source);
 
-                request.setResult("Processed: " + inputData.toUpperCase());
+                request.setResult("Processed:" + fingerprint);
                 request.setStatus("COMPLETED");
                 request.setProcessedAt(LocalDateTime.now());
 
                 saveRequestToDynamoDB(request);
 
                 meterRegistry.counter(String.format("tcc.%s.processed.success", source)).increment();
-                log.info("Request processed successfully: {} (source={})", request.getRequestId(), source);
+                log.debug("Request processed successfully: {} (source={})", request.getRequestId(), source);
 
                 return request;
             } catch (Exception e) {
@@ -66,48 +71,65 @@ public class ProcessingService {
         });
     }
 
-    private void simulateCpuWork(String inputData, String source) {
-        int iterations = 1000;
-        for (int i = 0; i < iterations; i++) {
-            String json = buildJsonPayload(inputData, source, i);
-            try {
-                JsonNode node = objectMapper.readTree(json);
-                String normalized = objectMapper.writeValueAsString(node);
-                if (normalized.length() > 0 && normalized.charAt(0) == '{') {
-                    int checksum = normalized.hashCode();
-                    if ((checksum & 1) == 0) {
-                        normalized = normalized.toUpperCase();
-                    }
+    private String simulateBusinessWork(String inputData, String source) {
+        int passes = Math.max(1, cpuPasses);
+        int rounds = Math.max(1, enrichmentRounds);
+        try {
+            JsonNode root = objectMapper.readTree(inputData);
+            long checksum = 0L;
+
+            for (int pass = 0; pass < passes; pass++) {
+                checksum = 31L * checksum + walkAndEnrich(root, source, pass, rounds);
+                if (pass < passes - 1) {
+                    String intermediate = objectMapper.writeValueAsString(root);
+                    root = objectMapper.readTree(intermediate);
                 }
-            } catch (JsonProcessingException ignored) {
-                // CPU-bound JSON work only; no external I/O
             }
+
+            return Long.toHexString(checksum);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Invalid JSON payload", e);
         }
     }
 
-    private String buildJsonPayload(String inputData, String source, int index) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("{\"source\":\"").append(source)
-                .append("\",\"index\":").append(index)
-                .append(",\"payload\":\"").append(inputData)
-                .append("\",\"checksum\":\"").append(Integer.toHexString(Math.abs(random.nextInt())))
-                .append("\",\"nested\":{");
+    private long walkAndEnrich(JsonNode node, String source, int pass, int rounds) {
+        long hash = (source.hashCode() * 31L) + pass;
 
-        for (int i = 0; i < 14; i++) {
-            sb.append("\"k").append(i).append("\":\"")
-                    .append(new String(randomBytes(64), StandardCharsets.UTF_8))
-                    .append("\",");
+        if (node == null || node.isNull()) {
+            return hash;
         }
-        sb.append("\"final\":\"").append(inputData.toUpperCase()).append("\"}} ");
-        return sb.toString();
-    }
-
-    private byte[] randomBytes(int length) {
-        byte[] bytes = new byte[length];
-        for (int i = 0; i < length; i++) {
-            bytes[i] = (byte) (random.nextInt(26) + 'a');
+        if (node.isObject()) {
+            Iterator<Map.Entry<String, JsonNode>> fields = node.fields();
+            while (fields.hasNext()) {
+                Map.Entry<String, JsonNode> entry = fields.next();
+                hash = 31L * hash + entry.getKey().toLowerCase().hashCode();
+                hash = 31L * hash + walkAndEnrich(entry.getValue(), source, pass, rounds);
+            }
+            return hash;
         }
-        return bytes;
+        if (node.isArray()) {
+            for (JsonNode child : node) {
+                hash = 31L * hash + walkAndEnrich(child, source, pass, rounds);
+            }
+            return hash;
+        }
+        if (node.isTextual()) {
+            String normalized = node.asText().trim().toLowerCase();
+            for (int i = 0; i < rounds; i++) {
+                hash = 31L * hash + normalized.hashCode();
+                hash = Long.rotateLeft(hash, (i + pass) % 17);
+                hash ^= (normalized.length() + i) * 0x9E3779B97F4A7C15L;
+            }
+            return hash;
+        }
+        if (node.isNumber()) {
+            double value = node.asDouble();
+            for (int i = 0; i < rounds; i++) {
+                hash = 31L * hash + Double.hashCode(value + i);
+            }
+            return hash;
+        }
+        return 31L * hash + node.hashCode();
     }
 
     private void saveRequestToDynamoDB(ProcessingRequest request) {
@@ -122,7 +144,7 @@ public class ProcessingService {
             );
 
             table.putItem(request);
-            log.info("Request saved to DynamoDB: {}", request.getRequestId());
+            log.debug("Request saved to DynamoDB: {}", request.getRequestId());
         } catch (Exception e) {
             log.error("Failed to save to DynamoDB", e);
             throw new RuntimeException("Failed to save to DynamoDB", e);

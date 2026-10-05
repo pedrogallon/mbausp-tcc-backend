@@ -1,0 +1,17 @@
+{
+  "kind": "event",
+  "profile": "steady",
+  "target_rps": 400,
+  "ramp_up": "30s",
+  "duration": "10m",
+  "start_time": "2026-10-05T01:23:46-03:00",
+  "end_time": "2026-10-05T01:23:46-03:00",
+  "avg_ms": 9.625302865865295,
+  "p50_ms": 9.5391,
+  "p95_ms": 12.2067,
+  "p99_ms": 15.888735999999982,
+  "failed_rate": 0,
+  "failed_count": 0,
+  "total_events": 245999,
+  "throughput_events_s": 390.4645786473207
+}

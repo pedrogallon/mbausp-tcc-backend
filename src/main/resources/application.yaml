@@ -31,3 +31,6 @@ aws:
 
 app:
   mode: request
+  processing:
+    cpu-passes: 6
+    enrichment-rounds: 150

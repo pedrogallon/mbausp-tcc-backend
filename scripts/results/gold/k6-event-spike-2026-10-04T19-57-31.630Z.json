@@ -1,0 +1,17 @@
+{
+  "kind": "event",
+  "profile": "spike",
+  "target_rps": 600,
+  "ramp_up": "30s",
+  "duration": "5m",
+  "start_time": "2026-10-04T16:57:31-03:00",
+  "end_time": "2026-10-04T16:57:31-03:00",
+  "avg_ms": 7.793022754208905,
+  "p50_ms": 7.52305,
+  "p95_ms": 9.842015,
+  "p99_ms": 12.449074999999997,
+  "failed_rate": 0,
+  "failed_count": 0,
+  "total_events": 188998,
+  "throughput_events_s": 572.6218134769588
+}

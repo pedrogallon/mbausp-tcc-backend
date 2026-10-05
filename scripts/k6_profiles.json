@@ -1,0 +1,54 @@
+{
+  "steady": {
+    "description": "Steady load: 400 req/s for 10 minutes",
+    "duration": "10m",
+    "rampUp": "30s",
+    "rate": 400,
+    "timeUnit": "1s",
+    "preAllocatedVUs": 100,
+    "maxVUs": 5000,
+    "gracefulStop": "30s",
+    "timeout": "15s",
+    "endpoint": "http://lb-3-663571516.sa-east-1.elb.amazonaws.com/api/v1/process",
+    "queue_url": "https://sqs.sa-east-1.amazonaws.com/046311955936/processing-queue-2"
+  },
+  "spike": {
+    "description": "Spike load: 800 req/s for 5 minutes",
+    "duration": "5m",
+    "rampUp": "30s",
+    "rate": 800,
+    "timeUnit": "1s",
+    "preAllocatedVUs": 200,
+    "maxVUs": 5000,
+    "gracefulStop": "30s",
+    "timeout": "15s",
+    "endpoint": "http://lb-3-663571516.sa-east-1.elb.amazonaws.com/api/v1/process",
+    "queue_url": "https://sqs.sa-east-1.amazonaws.com/046311955936/processing-queue-2"
+  },
+  "long": {
+    "description": "Long run: 200 req/s for 20 minutes",
+    "duration": "20m",
+    "rampUp": "30s",
+    "rate": 200,
+    "timeUnit": "1s",
+    "preAllocatedVUs": 100,
+    "maxVUs": 1200,
+    "gracefulStop": "30s",
+    "timeout": "15s",
+    "endpoint": "http://lb-3-663571516.sa-east-1.elb.amazonaws.com/api/v1/process",
+    "queue_url": "https://sqs.sa-east-1.amazonaws.com/046311955936/processing-queue-2"
+  },
+  "warmup": {
+    "description": "Warm up: 100 req/s for 2 minutes",
+    "duration": "2m",
+    "rampUp": "30s",
+    "rate": 100,
+    "timeUnit": "1s",
+    "preAllocatedVUs": 50,
+    "maxVUs": 200,
+    "gracefulStop": "15s",
+    "timeout": "15s",
+    "endpoint": "http://lb-3-663571516.sa-east-1.elb.amazonaws.com/api/v1/process",
+    "queue_url": "https://sqs.sa-east-1.amazonaws.com/046311955936/processing-queue-2"
+  }
+}

@@ -3,4 +3,4 @@ app:
 
 aws:
   dynamodb:
-    table-name: processing-event-table
+    table-name: processing-request-table

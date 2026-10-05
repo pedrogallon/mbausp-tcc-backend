@@ -1,0 +1,17 @@
+{
+  "kind": "request",
+  "profile": "steady",
+  "target_rps": 300,
+  "ramp_up": "30s",
+  "duration": "10m",
+  "start_time": "2026-10-04T12:16:05-03:00",
+  "end_time": "2026-10-04T12:16:05-03:00",
+  "avg_ms": 10.891452059360752,
+  "p50_ms": 10.22,
+  "p95_ms": 14.097630000000002,
+  "p99_ms": 24.864605999999995,
+  "failed_rate": 0,
+  "failed_count": 0,
+  "total_requests": 184499,
+  "throughput_req_s": 292.8523228842714
+}

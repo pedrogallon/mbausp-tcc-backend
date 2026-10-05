@@ -1,66 +1,101 @@
-# Testes de Carga
+# Testes de carga (k6)
 
-## Instruções
+Requer [k6](https://k6.io/docs/get-started/installation/) instalado. Perfis em `k6_profiles.json`. Payload em `mock_data.json`.
 
-```bash
-pip install -r requirements.txt
-aws configure # aws login
-python load_test.py --type event --profile long 
+## Como rodar
 
-# --type {request,event}
-# --profile {steady,spike,long}
+```powershell
+# request-based (HTTP)
+k6 run -e type=request -e K6_PROFILE=test k6_load_test.js
 
+# event-based (SQS) — precisa exportar credenciais no shell
+Remove-Item Env:AWS_ACCESS_KEY_ID, Env:AWS_SECRET_ACCESS_KEY, Env:AWS_SESSION_TOKEN -ErrorAction SilentlyContinue
+aws login
+aws configure export-credentials --format powershell | Invoke-Expression
+$env:AWS_REGION = "sa-east-1"
+k6 run -e type=event -e K6_PROFILE=test k6_load_test.js
 ```
 
-## Perfis de Carga
-- **Steady:** 100 req/s por 30 minutos
-- **Spike:** 1000 req/s por 10 minutos
-- **Long:** 50 req/s por 60 minutos
+| Argumento | Valores | Default |
+|-----------|---------|---------|
+| `type` | `request`, `event` | `request` |
+| `K6_PROFILE` | `test`, `steady`, `spike`, `long`, `warmup` | `steady` |
 
-### Output
-```
-======================================================================
-HTTP SUSTAINED LOAD TEST
-======================================================================
-Endpoint: http://localhost:8080/actuator/health
-Duração: 1800s (30m)
-Target RPS: 100
-Concurrency: 20
-Timeout: 30s
-Payload Size: 15.23 KB
-Expected Total Requests: ~180000
-======================================================================
+## Repetir um perfil (5x)
 
-Test started at 14:30:45
-Will run until 15:00:45
+```powershell
+# request
+python run_k6_repeat.py --type request --profile spike
 
-======================================================================
-RESULTS
-======================================================================
-Total Time: 1800.45s
-Actual RPS: 99.98
-Total Requests: 180000
-Successful: 180000
-Failed: 0
-Success Rate: 100.00%
-
-Response Times (seconds):
-  Average: 0.150s
-  Min: 0.087s
-  Max: 0.234s
-  P95: 0.201s
-
-Status Codes:
-  200: 180000
-======================================================================
+# event
+Remove-Item Env:AWS_ACCESS_KEY_ID, Env:AWS_SECRET_ACCESS_KEY, Env:AWS_SESSION_TOKEN -ErrorAction SilentlyContinue
+aws login
+aws configure export-credentials --format powershell | Invoke-Expression
+$env:AWS_REGION = "sa-east-1"
+python run_k6_repeat.py --type event --profile spike
 ```
 
-## Configuração de perfis
+Opcionais: `--runs 5` (default), `--gap-minutes 5` (default). Log em `k6_repeat.log`.
 
-Edite `profiles.json` para personalizar os perfis de carga. Cada perfil define:
-- `Duração_seconds`: **Por quanto tempo** o teste é executado
-- `target_rps`: **Requisições/mensagens por segundo alvo**
-- `requests_per_batch`: **Quantas requisições** por ciclo de lote
-- `batch_interval_seconds`: **Intervalo entre lotes** (normalmente 1 segundo)
-- `concurrency`: **Número de threads concorrentes**
-- `timeout`: **Tempo limite** da requisição/mensagem em segundos
+## Scheduler noturno
+
+Roda **event** e **request em paralelo**: **warmup x1** → gap 5 min → **steady → spike → long** (**5x** cada), com **5 min** entre runs. Log em `k6_schedule.log`.
+
+```powershell
+Remove-Item Env:AWS_ACCESS_KEY_ID, Env:AWS_SECRET_ACCESS_KEY, Env:AWS_SESSION_TOKEN -ErrorAction SilentlyContinue
+aws login
+aws configure export-credentials --format powershell | Invoke-Expression
+$env:AWS_REGION = "sa-east-1"
+python run_k6_schedule.py
+```
+
+Deixe o PC acordado (desative sleep).
+
+## Output
+
+Arquivos em `results/`:
+
+```
+k6-{type}-{profile}-{ISO-timestamp}.json
+```
+
+Exemplo: `results/k6-request-test-2026-10-04T01-02-24.517Z.json`
+
+```json
+{
+  "kind": "request",
+  "profile": "test",
+  "target_rps": 20,
+  "duration": "2m",
+  "avg_ms": 9.57,
+  "p50_ms": 9.10,
+  "p95_ms": 11.95,
+  "p99_ms": 18.21,
+  "failed_rate": 0,
+  "failed_count": 0,
+  "total_requests": 2401,
+  "throughput_req_s": 20.0
+}
+```
+
+Para `type=event`, os campos de volume são `total_events` e `throughput_events_s`.
+
+## CloudWatch para gold-new
+
+Janela: início da 1ª execução k6 **menos 10 minutos** (steady: **20 minutos**) até o fim da 5ª **mais 5 minutos**:
+
+```powershell
+python fetch_gold_cloudwatch.py
+```
+
+## Visualizar gold-new
+
+Gráficos em português por perfil (throughput, latência, processamento, falhas, CPU/memória ECS, custo):
+
+```powershell
+python fetch_gold_cloudwatch.py
+python visualize_gold.py
+```
+
+Entrada: `results/gold-new/cloudwatch-{type}-{profile}.csv` (+ `k6-*.json`).  
+Também gera `cloudwatch-recursos-{profile}.csv` e PNGs em `results/gold-new/charts/` (inclui `perfil-*-recursos.png`).
