@@ -2,7 +2,7 @@
 
 Requer [k6](https://k6.io/docs/get-started/installation/). Perfis em `k6_profiles.json`, payload em `mock_data.json`.
 
-**AWS no shell** (necessário para `type=event`, fetch CloudWatch e schedule):
+**AWS no shell** (necessário para `type=event` e fetch CloudWatch):
 
 ```powershell
 Remove-Item Env:AWS_ACCESS_KEY_ID, Env:AWS_SECRET_ACCESS_KEY, Env:AWS_SESSION_TOKEN -ErrorAction SilentlyContinue
