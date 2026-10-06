@@ -15,7 +15,7 @@ import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.colors import LinearSegmentedColormap
-from matplotlib.patches import Patch, Polygon
+from matplotlib.patches import Polygon
 from matplotlib.ticker import FuncFormatter
 
 ROOT = Path(__file__).resolve().parent
@@ -44,6 +44,19 @@ Y_PAD = 1.2
 X_PAD_MINUTES = 2.0
 SUBPLOT_HSPACE = 0.14
 SUBPLOT_WSPACE = 0.09
+FIG_DPI = 150
+FIG_WIDTH_PX = 900
+FIG_WIDTH_IN = FIG_WIDTH_PX / FIG_DPI
+
+
+def figure_size(width_in: float, height_in: float) -> tuple[float, float]:
+    """Largura fixa de 900 px. A altura acompanha a proporção de cada figura."""
+    scale = FIG_WIDTH_IN / width_in
+    return (FIG_WIDTH_IN, height_in * scale)
+
+
+def save_figure(fig, out_path: Path) -> None:
+    fig.savefig(out_path, dpi=FIG_DPI)
 
 def format_br(value: float, decimals: int | None = None) -> str:
     """Padrão BR: ponto como milhar e vírgula como decimal (ex.: 1.234,56)."""
@@ -398,7 +411,22 @@ def trim_rows_to_k6_window(
     origin = min(starts).replace(second=0, microsecond=0) - timedelta(minutes=lead_minutes)
     finish = max(ends).replace(second=0, microsecond=0) + timedelta(minutes=trail_minutes)
     trimmed = [r for r in rows if origin <= r["minute"] <= finish]
+    trimmed = crop_to_activity(trimmed, kind, pad_minutes=float(lead_minutes))
     return trimmed, origin
+
+
+def crop_to_activity(rows: list[dict], kind: str, pad_minutes: float = 2.0, threshold: float = 20.0) -> list[dict]:
+    """Mantém a mesma folga antes da primeira atividade e depois da última."""
+    if len(rows) < 2:
+        return rows
+    level = throughput_series_for_kind(rows, kind)
+    active = np.flatnonzero(level >= threshold)
+    if active.size == 0:
+        return rows
+    pad = int(round(pad_minutes))
+    start = max(0, int(active[0]) - pad)
+    end = min(len(rows) - 1, int(active[-1]) + pad)
+    return rows[start : end + 1]
 
 def series(rows: list[dict], key: str) -> np.ndarray:
     return np.array([row.get(key) if row.get(key) is not None else 0.0 for row in rows], dtype=float)
@@ -551,12 +579,75 @@ def pad_ylim(ax, values=None, ymin=0.0, factor: float | None = None):
         return
     ax.set_ylim(ymin, ymax * pad)
 
-def style_axes(ax, title: str, ylabel: str, xlabel: str = "minutos"):
-    ax.set_title(title)
-    ax.set_ylabel(ylabel)
-    ax.set_xlabel(xlabel)
-    ax.grid(True, alpha=0.3)
-    ax.legend(loc="upper right", fontsize=8)
+def format_panel(ax, letter: str | None = None, *, keep_right: bool = False) -> None:
+    """Norma do artigo: sem grade, sem borda, sem preenchimento e sem título.
+
+    Os eixos ficam em preto, 1,5 pt. A letra do painel, quando há mais de um,
+    fica no canto superior esquerdo, maiúscula, sem parênteses e sem ponto.
+    """
+    ax.set_title("")
+    ax.grid(False)
+    ax.set_facecolor("white")
+    visible = {"left", "bottom"}
+    if keep_right:
+        visible.add("right")
+    for side in ("top", "right", "left", "bottom"):
+        spine = ax.spines[side]
+        spine.set_visible(side in visible)
+        if side in visible:
+            spine.set_color("black")
+            spine.set_linewidth(1.5)
+    ax.tick_params(
+        axis="both",
+        which="major",
+        width=1.5,
+        color="black",
+        labelcolor="black",
+        labelsize=10,
+    )
+    ax.xaxis.label.set_fontname("Arial")
+    ax.yaxis.label.set_fontname("Arial")
+    ax.xaxis.label.set_fontsize(10)
+    ax.yaxis.label.set_fontsize(10)
+    if letter:
+        ax.text(
+            0.01,
+            0.98,
+            letter,
+            transform=ax.transAxes,
+            ha="left",
+            va="top",
+            fontsize=10,
+            fontname="Arial",
+            color="black",
+            clip_on=False,
+            zorder=6,
+        )
+
+
+def place_legend(ax, handles=None, labels=None):
+    """Legenda acima do painel, fora da área dos dados."""
+    if handles is None:
+        handles, labels = ax.get_legend_handles_labels()
+    if not handles:
+        return None
+    return ax.legend(
+        handles,
+        labels,
+        loc="lower center",
+        bbox_to_anchor=(0.5, 1.02),
+        ncols=1 if len(handles) >= 3 else len(handles),
+        frameon=False,
+        borderaxespad=0,
+        prop={"family": "Arial", "size": 8},
+    )
+
+
+def style_axes(ax, ylabel: str, xlabel: str = "minutos", letter: str | None = None):
+    ax.set_ylabel(ylabel, fontname="Arial", fontsize=10)
+    ax.set_xlabel(xlabel, fontname="Arial", fontsize=10)
+    format_panel(ax, letter)
+    place_legend(ax)
     pad_ylim(ax)
 
 def paint_under(ax, x, y, color: str, alpha_top: float = 0.40, zorder: float = 1.5) -> None:
@@ -611,7 +702,7 @@ def plot_profile(
     k6_groups: dict[tuple[str, str], list[dict]],
     profiles: dict,
 ) -> Path:
-    fig = plt.figure(figsize=(12, 10.2), constrained_layout=True)
+    fig = plt.figure(figsize=figure_size(12, 10.2), constrained_layout=True)
     gs = fig.add_gridspec(3, 2, height_ratios=[1, 1, 2])
     ax_tp = fig.add_subplot(gs[0:2, 0])
     ax_lat = fig.add_subplot(gs[0, 1])
@@ -696,44 +787,35 @@ def plot_profile(
                 lat_event_vals.append(event_lat)
             svc_err = series(rows, "events_app_error_rate") * 100.0
 
-        paint_under(ax_tp, x, tp, color)
-        paint_under(ax_proc, x, proc, color)
-        paint_under(ax_fail, x, svc_err, color, alpha_top=0.30)
-        ax_tp.plot(x, tp, color=color, linewidth=1.8, label=label, zorder=3)
+        ax_tp.plot(x, tp, color=color, linewidth=1.5, label=label, zorder=3)
         ax_proc.plot(x, proc, color=color, linewidth=1.8, label=label, zorder=3)
         ax_fail.plot(x, svc_err, color=color, linewidth=1.8, label=label, zorder=3)
 
-    style_axes(ax_tp, "Unidades processadas pela aplicação", "unidades/s")
+    style_axes(ax_tp, "unidades/s", letter="A")
 
-    ax_lat.set_title("Percentis de tempo do ALB na requisição")
-    ax_lat.set_ylabel("ms")
-    ax_lat.grid(True, alpha=0.3)
+    ax_lat.set_ylabel("ms", fontname="Arial", fontsize=10)
     ax_lat.tick_params(axis="x", labelbottom=False)
+    format_panel(ax_lat, "B")
     if lat_req_vals:
         pad_ylim(ax_lat, np.concatenate(lat_req_vals), ymin=0.0)
-    if ax_lat.get_legend_handles_labels()[0]:
-        ax_lat.legend(loc="upper right", fontsize=7)
+    place_legend(ax_lat)
 
-    ax_lat_event.set_title("Percentis de processamento no evento")
-    ax_lat_event.set_ylabel("ms")
-    ax_lat_event.set_xlabel("minutos")
-    ax_lat_event.grid(True, alpha=0.3)
+    ax_lat_event.set_ylabel("ms", fontname="Arial", fontsize=10)
+    ax_lat_event.set_xlabel("minutos", fontname="Arial", fontsize=10)
+    format_panel(ax_lat_event, "C")
     if lat_event_vals:
         pad_ylim(ax_lat_event, np.concatenate(lat_event_vals), ymin=0.0)
-    if ax_lat_event.get_legend_handles_labels()[0]:
-        ax_lat_event.legend(loc="upper right", fontsize=7)
+    place_legend(ax_lat_event)
 
-    style_axes(ax_fail, "Percentual de exceções da aplicação", "%")
-    style_axes(ax_proc, "Tempo médio de processamento da aplicação", "ms")
-    for ax in (ax_tp, ax_fail, ax_proc):
-        ax.set_xlabel("minutos")
+    style_axes(ax_fail, "%", letter="D")
+    style_axes(ax_proc, "ms", letter="E")
 
     apply_shared_xlim((ax_tp, ax_lat, ax_lat_event, ax_proc, ax_fail), x_arrays, pad_minutes=X_PAD_MINUTES)
     space_subplots(fig)
     apply_br_number_format(fig)
 
     out_path = out_dir / f"perfil-{profile}-metricas.png"
-    fig.savefig(out_path, dpi=150, bbox_inches="tight")
+    save_figure(fig, out_path)
     plt.close(fig)
     return out_path
 
@@ -827,79 +909,42 @@ def plot_event_sqs_extension(
     avg_proc = float(np.mean([w["process_minutes"] for w in windows])) if windows else 0.0
     avg_ext = float(np.mean([w["extension_minutes"] for w in windows])) if windows else 0.0
 
-    fig, axes = plt.subplots(2, 1, figsize=(11, 9.6), sharex=False)
+    fig, axes = plt.subplots(2, 1, figsize=figure_size(11, 9.6), sharex=False, constrained_layout=True)
     x_label = "minutos"
 
     ax_rate, ax_backlog = axes
-    ax_rate.plot(x, sent, color=EVENT_COLOR, linewidth=1.6, label="Enviadas à fila")
-    ax_rate.plot(x, deleted, color="#2ca02c", linewidth=1.6, label="Excluídas pelo consumidor")
-    for w in windows:
-        x0 = (w["send_start"] - origin).total_seconds() / 60.0
-        x1 = (w["send_end"] - origin).total_seconds() / 60.0
-        x2 = (w["drain_end"] - origin).total_seconds() / 60.0
-        ax_rate.axvspan(x0, x1, color=EVENT_COLOR, alpha=0.08)
-        ax_rate.axvspan(x1, x2, color="#2ca02c", alpha=0.12)
-    ax_rate.set_title(
-        "Publicação vs consumo de mensagens SQS"
-    )
-    ax_rate.set_ylabel("mensagens/s")
-    ax_rate.grid(True, alpha=0.3)
+    ax_rate.plot(x, sent, color=EVENT_COLOR, linewidth=1.5, label="Enviadas à fila")
+    ax_rate.plot(x, deleted, color="#2ca02c", linewidth=1.5, label="Excluídas pelo consumidor")
+    ax_rate.set_ylabel("mensagens/s", fontname="Arial", fontsize=10)
     pad_ylim(ax_rate, np.concatenate([sent, deleted]), ymin=0.0, factor=1.1)
-    leg_rate = ax_rate.legend(loc="upper right", fontsize=8, framealpha=0.92)
+    place_legend(ax_rate)
+    format_panel(ax_rate, "A")
 
-    ax_backlog.plot(x, visible, color="#d62728", linewidth=1.6, label="Mensagens visíveis na fila")
+    ax_backlog.plot(x, visible, color="#d62728", linewidth=1.5, label="Mensagens visíveis na fila")
     ax_age = ax_backlog.twinx()
-    ax_age.plot(x, age, color="#9467bd", linewidth=1.4, linestyle="--", label="Idade da mensagem mais antiga (s)")
-    for w in windows:
-        x0 = (w["send_start"] - origin).total_seconds() / 60.0
-        x1 = (w["send_end"] - origin).total_seconds() / 60.0
-        x2 = (w["drain_end"] - origin).total_seconds() / 60.0
-        ax_backlog.axvspan(x0, x1, color=EVENT_COLOR, alpha=0.08)
-        ax_backlog.axvspan(x1, x2, color="#2ca02c", alpha=0.12)
-    ax_backlog.set_title("Mensagens acumuladas na fila durante e após cada publicação", pad=8)
-    ax_backlog.set_ylabel("mensagens visíveis")
-    ax_age.set_ylabel("idade máxima (s)")
-    ax_backlog.grid(True, alpha=0.3)
+    ax_age.plot(x, age, color="#9467bd", linewidth=1.5, linestyle="--", label="Idade da mensagem mais antiga (s)")
+    ax_backlog.set_ylabel("mensagens visíveis", fontname="Arial", fontsize=10)
+    ax_age.set_ylabel("s", fontname="Arial", fontsize=10)
     pad_ylim(ax_backlog, visible, ymin=0.0, factor=1.1)
     pad_ylim(ax_age, age, ymin=0.0, factor=1.1)
     lines_a, labels_a = ax_backlog.get_legend_handles_labels()
     lines_b, labels_b = ax_age.get_legend_handles_labels()
-    ax_backlog.legend(lines_a + lines_b, labels_a + labels_b, loc="upper right", fontsize=8)
+    place_legend(ax_backlog, lines_a + lines_b, labels_a + labels_b)
+    format_panel(ax_backlog, "B")
+    format_panel(ax_age, keep_right=True)
+    ax_age.set_facecolor("none")
+    ax_age.spines["left"].set_visible(False)
+    ax_age.spines["bottom"].set_visible(False)
 
     for ax in (ax_rate, ax_backlog):
         ax.tick_params(axis="x", labelbottom=True, bottom=True)
-        ax.set_xlabel(x_label, labelpad=4)
+        ax.set_xlabel(x_label, fontname="Arial", fontsize=10, labelpad=4)
 
-    band_handles = [
-        Patch(facecolor=EVENT_COLOR, alpha=0.35, edgecolor=EVENT_COLOR, label="Intervalo de publicação"),
-        Patch(facecolor="#2ca02c", alpha=0.35, edgecolor="#2ca02c", label="Consumo após a publicação"),
-    ]
-    band_legend_kw = dict(
-        handles=band_handles,
-        ncol=2,
-        fontsize=9,
-        frameon=True,
-        columnspacing=1.0,
-        handletextpad=0.5,
-        borderpad=0.35,
-    )
-    fig.subplots_adjust(left=0.10, right=0.92, top=0.93, bottom=0.10, hspace=0.34)
-    leg_bands_top = fig.legend(
-        **band_legend_kw,
-        loc="upper center",
-        bbox_to_anchor=(0.5, 0.528),
-    )
-    fig.add_artist(leg_bands_top)
-    ax_rate.add_artist(leg_rate)
-    fig.legend(
-        **band_legend_kw,
-        loc="lower center",
-        bbox_to_anchor=(0.5, 0.012),
-    )
+    fig.set_constrained_layout_pads(h_pad=0.08, hspace=0.12)
 
     apply_br_number_format(fig)
     out_path = out_dir / f"perfil-{profile}-event-extensao-sqs.png"
-    fig.savefig(out_path, dpi=150)
+    save_figure(fig, out_path)
     plt.close(fig)
 
     print(
@@ -915,7 +960,7 @@ def plot_timeout_15s(
     out_dir: Path,
 ) -> Path:
     """Chamadas que o cliente não concluiu. Não é timeout de 15 s nem exceção da aplicação."""
-    fig, ax = plt.subplots(figsize=(11, 4.5), constrained_layout=True)
+    fig, ax = plt.subplots(figsize=figure_size(11, 4.5), constrained_layout=True)
 
     rows = series_map.get("request")
     vals = []
@@ -924,27 +969,25 @@ def plot_timeout_15s(
         x = relative_minutes(rows, origin)
         k6_timeout = series(rows, "k6_failed_rate_pct")
         vals.append(k6_timeout)
-        paint_under(ax, x, k6_timeout, REQUEST_COLOR)
         ax.plot(
             x,
             k6_timeout,
             color=REQUEST_COLOR,
-            linewidth=1.8,
+            linewidth=1.5,
             label="Requisição — não concluída pelo cliente",
             zorder=3,
         )
 
-    ax.set_title("Porcentagem de requisições não concluídas pelo cliente (timeout de 15s)")
-    ax.set_ylabel("%")
-    ax.set_xlabel("minutos")
-    ax.grid(True, alpha=0.3)
-    ax.legend(loc="upper right", fontsize=8)
+    ax.set_ylabel("%", fontname="Arial", fontsize=10)
+    ax.set_xlabel("minutos", fontname="Arial", fontsize=10)
+    format_panel(ax)
+    place_legend(ax)
     if vals:
         pad_ylim(ax, np.concatenate(vals), ymin=0.0)
 
     apply_br_number_format(fig)
     out_path = out_dir / f"perfil-{profile}-timeout-15s.png"
-    fig.savefig(out_path, dpi=150)
+    save_figure(fig, out_path)
     plt.close(fig)
     return out_path
 
@@ -957,7 +1000,7 @@ def plot_k6_client_throughput(
     profiles: dict,
 ) -> Path:
     """Vazão reportada pelo cliente k6 (throughput_req_s / throughput_events_s), sem CloudWatch."""
-    fig, ax = plt.subplots(figsize=(11, 4.5), constrained_layout=True)
+    fig, ax = plt.subplots(figsize=figure_size(11, 4.5), constrained_layout=True)
     align = overlay_alignment(series_map, profile, k6_groups, profiles, origins)
     vals: list[np.ndarray] = []
     x_arrays: list[np.ndarray] = []
@@ -982,28 +1025,26 @@ def plot_k6_client_throughput(
             x_p, y_p = x[mask], y[mask]
             x_arrays.append(x_p)
             vals.append(y_p)
-            paint_under(ax, x_p, y_p, color)
             ax.plot(
                 x_p,
                 y_p,
                 color=color,
-                linewidth=1.8,
+                linewidth=1.5,
                 label=f"{label} — vazão no cliente k6",
                 zorder=3,
             )
 
-    ax.set_title("Vazão medida pelo cliente k6")
-    ax.set_ylabel("operações/s")
-    ax.set_xlabel("minutos")
-    ax.grid(True, alpha=0.3)
-    ax.legend(loc="upper right", fontsize=8)
+    ax.set_ylabel("operações/s", fontname="Arial", fontsize=10)
+    ax.set_xlabel("minutos", fontname="Arial", fontsize=10)
+    format_panel(ax)
+    place_legend(ax)
     if vals:
         pad_ylim(ax, np.concatenate(vals), ymin=0.0)
     apply_shared_xlim((ax,), x_arrays, pad_minutes=X_PAD_MINUTES)
 
     apply_br_number_format(fig)
     out_path = out_dir / f"perfil-{profile}-vazao-k6.png"
-    fig.savefig(out_path, dpi=150)
+    save_figure(fig, out_path)
     plt.close(fig)
     return out_path
 
@@ -1082,7 +1123,7 @@ def plot_resources(
     k6_groups: dict[tuple[str, str], list[dict]],
     profiles: dict,
 ) -> Path:
-    fig, axes = plt.subplots(2, 1, figsize=(11, 7.9), constrained_layout=True, sharex=False)
+    fig, axes = plt.subplots(2, 1, figsize=figure_size(11, 7.9), constrained_layout=True, sharex=False)
     space_subplots(fig, hspace=0.16)
     ax_cpu, ax_mem = axes
     cpu_vals = []
@@ -1115,25 +1156,21 @@ def plot_resources(
             x_arrays.append(x_p)
             cpu_vals.append(cpu_p)
             mem_vals.append(mem_p)
-            paint_under(ax_cpu, x_p, cpu_p, color)
-            paint_under(ax_mem, x_p, mem_p, color)
-            ax_cpu.plot(x_p, cpu_p, color=color, linewidth=1.8, label=label, zorder=3)
-            ax_mem.plot(x_p, mem_p, color=color, linewidth=1.8, label=label, zorder=3)
+            ax_cpu.plot(x_p, cpu_p, color=color, linewidth=1.5, label=label, zorder=3)
+            ax_mem.plot(x_p, mem_p, color=color, linewidth=1.5, label=label, zorder=3)
 
     x_label = "minutos"
-    ax_cpu.set_title("Utilização média da CPU alocada")
-    ax_cpu.set_ylabel("%")
-    ax_cpu.set_xlabel(x_label)
-    ax_cpu.grid(True, alpha=0.3)
-    ax_cpu.legend(loc="upper right", fontsize=8)
+    ax_cpu.set_ylabel("%", fontname="Arial", fontsize=10)
+    ax_cpu.set_xlabel(x_label, fontname="Arial", fontsize=10)
+    format_panel(ax_cpu, "A")
+    place_legend(ax_cpu)
     if cpu_vals:
         pad_ylim(ax_cpu, np.concatenate(cpu_vals), ymin=0.0)
 
-    ax_mem.set_title("Utilização média da memória alocada")
-    ax_mem.set_ylabel("%")
-    ax_mem.set_xlabel(x_label)
-    ax_mem.grid(True, alpha=0.3)
-    ax_mem.legend(loc="upper right", fontsize=8)
+    ax_mem.set_ylabel("%", fontname="Arial", fontsize=10)
+    ax_mem.set_xlabel(x_label, fontname="Arial", fontsize=10)
+    format_panel(ax_mem, "B")
+    place_legend(ax_mem)
     if mem_vals:
         pad_ylim(ax_mem, np.concatenate(mem_vals), ymin=0.0)
     apply_shared_xlim((ax_cpu, ax_mem), x_arrays, pad_minutes=X_PAD_MINUTES)
@@ -1145,7 +1182,7 @@ def plot_resources(
 
     apply_br_number_format(fig)
     out_path = out_dir / f"perfil-{profile}-recursos.png"
-    fig.savefig(out_path, dpi=150, bbox_inches="tight")
+    save_figure(fig, out_path)
     plt.close(fig)
     return out_path
 
@@ -1160,25 +1197,24 @@ def plot_cost_comparison(costs: dict[tuple[str, str], dict[str, float]], out_dir
 
     x = np.arange(len(labels))
     width = 0.55
-    fig, ax = plt.subplots(figsize=(10, 5), constrained_layout=True)
-    ax.bar(x, fargate_vals, width, label="ECS Fargate", color=COST_COLORS["fargate"])
-    ax.bar(x, sqs_vals, width, bottom=fargate_vals, label="SQS", color=COST_COLORS["sqs"])
+    fig, ax = plt.subplots(figsize=figure_size(10, 5), constrained_layout=True)
+    ax.bar(x, fargate_vals, width, label="ECS Fargate", color=COST_COLORS["fargate"], edgecolor="none")
+    ax.bar(x, sqs_vals, width, bottom=fargate_vals, label="SQS", color=COST_COLORS["sqs"], edgecolor="none")
 
     totals = [f + s for f, s in zip(fargate_vals, sqs_vals)]
     for i, total in enumerate(totals):
         ax.text(i, total, f"US$ {format_br(total, 3)}", ha="center", va="bottom", fontsize=8)
 
     ax.set_xticks(x)
-    ax.set_xticklabels(labels)
-    ax.set_ylabel("Custo estimado na janela (US$)")
-    ax.set_title("Custo estimado por topologia e perfil de carga")
-    ax.grid(True, axis="y", alpha=0.3)
-    ax.legend(loc="upper right")
+    ax.set_xticklabels(labels, fontname="Arial", fontsize=10)
+    ax.set_ylabel("US$", fontname="Arial", fontsize=10)
+    format_panel(ax)
+    place_legend(ax)
     pad_ylim(ax, totals)
 
     apply_br_number_format(fig, y_only=True)
     out_path = out_dir / "comparacao-custo-aws.png"
-    fig.savefig(out_path, dpi=150)
+    save_figure(fig, out_path)
     plt.close(fig)
     return out_path
 
@@ -1187,10 +1223,9 @@ def plot_k6_summary_bars(k6_groups: dict[tuple[str, str], list[dict]], out_dir: 
         return None
 
     keys = sorted(k6_groups, key=lambda k: (k[1], k[0]))
-    labels = [f"{KIND_PT.get(k, k)}\n{profile_title(p)}" for k, p in keys]
+    short_profile = {"spike": "pico", "steady": "estável"}
+    labels = [f"{KIND_PT.get(k, k)}, {short_profile.get(p, profile_title(p))}" for k, p in keys]
     thr = []
-    p95 = []
-    fail = []
     for key in keys:
         runs = k6_groups[key]
         thr.append(
@@ -1203,38 +1238,19 @@ def plot_k6_summary_bars(k6_groups: dict[tuple[str, str], list[dict]], out_dir: 
                 ]
             )
         )
-        p95.append(np.mean([r.get("p95_ms") or 0.0 for r in runs]))
-        fail.append(np.mean([(r.get("failed_rate") or 0.0) * 100.0 for r in runs]))
 
-    fig, axes = plt.subplots(1, 3, figsize=(12.5, 4.2), constrained_layout=True)
-    space_subplots(fig, wspace=0.14)
+    fig, ax = plt.subplots(figsize=(FIG_WIDTH_IN, 3.2), constrained_layout=True)
     colors = [REQUEST_COLOR if k == "request" else EVENT_COLOR for k, _ in keys]
-
-    axes[0].bar(labels, thr, color=colors)
-    axes[0].set_title("Operações concluídas pelo cliente")
-    axes[0].set_ylabel("operações/s")
-    axes[0].tick_params(axis="x", labelrotation=30)
-    pad_ylim(axes[0], thr)
-
-    axes[1].bar(labels, p95, color=colors)
-    axes[1].set_title("Tempo da operação de entrada no cliente, p95")
-    axes[1].set_ylabel("ms")
-    axes[1].tick_params(axis="x", labelrotation=30)
-    pad_ylim(axes[1], p95)
-
-    axes[2].bar(labels, fail, color=colors)
-    axes[2].set_title("Chamadas não concluídas pelo cliente")
-    axes[2].set_ylabel("%")
-    axes[2].tick_params(axis="x", labelrotation=30)
-    pad_ylim(axes[2], fail)
-
-    for ax in axes:
-        ax.grid(True, axis="y", alpha=0.3)
-    space_subplots(fig, wspace=0.14)
+    ax.bar(range(len(labels)), thr, color=colors, edgecolor="none")
+    ax.set_ylabel("operações/s", fontname="Arial", fontsize=10)
+    format_panel(ax)
+    ax.set_xticks(range(len(labels)))
+    ax.set_xticklabels(labels, fontname="Arial", fontsize=10)
+    pad_ylim(ax, thr)
     apply_br_number_format(fig, y_only=True)
 
     out_path = out_dir / "resumo-k6-comparacao.png"
-    fig.savefig(out_path, dpi=150, bbox_inches="tight")
+    save_figure(fig, out_path)
     plt.close(fig)
     return out_path
 
@@ -1245,7 +1261,22 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 def main() -> int:
-    plt.rcParams.update({"font.size": 10})
+    plt.rcParams.update(
+        {
+            "font.family": "Arial",
+            "font.size": 10,
+            "axes.labelsize": 10,
+            "xtick.labelsize": 10,
+            "ytick.labelsize": 10,
+            "axes.linewidth": 1.5,
+            "axes.edgecolor": "black",
+            "axes.grid": False,
+            "axes.facecolor": "white",
+            "figure.facecolor": "white",
+            "savefig.facecolor": "white",
+            "legend.frameon": False,
+        }
+    )
 
     args = parse_args()
     input_dir = args.input if args.input.is_absolute() else ROOT / args.input
@@ -1260,6 +1291,7 @@ def main() -> int:
     k6_groups = load_k6_summaries(input_dir)
     written: list[Path] = []
     costs: dict[tuple[str, str], dict[str, float]] = {}
+    excel_payload: list[dict] = []
 
     print(
         "Nota: latência event usa percentis EMF "
@@ -1306,12 +1338,29 @@ def main() -> int:
         resource_csv = write_resources_csv(profile, series_map, origins, input_dir)
         print(f"CSV recursos: {resource_csv}")
         written.append(plot_resources(profile, series_map, origins, out_dir, k6_groups, profiles))
+        excel_payload.append(
+            {
+                "profile": profile,
+                "series_map": series_map,
+                "origins": origins,
+                "k6_groups": k6_groups,
+                "profiles": profiles,
+            }
+        )
 
     written.append(plot_cost_comparison(costs, out_dir))
 
     k6_chart = plot_k6_summary_bars(k6_groups, out_dir)
     if k6_chart:
         written.append(k6_chart)
+
+    from excel_charts import export_chart_files
+
+    try:
+        csv_path, xlsx_path = export_chart_files(out_dir, excel_payload, costs, k6_groups)
+        written.extend((csv_path, xlsx_path))
+    except PermissionError as exc:
+        print(f"Planilha não gravada, arquivo em uso: {exc.filename}")
 
     print("\nCustos atribuídos ao workload:")
     for key in sorted(costs, key=lambda k: (k[1], k[0])):
