@@ -15,11 +15,11 @@ management:
   metrics:
     distribution:
       percentiles:
-        tcc.requests.processing.time: 0.5,0.95,0.99
-        tcc.events.processing.time: 0.5,0.95,0.99
+        request.process.time: 0.5,0.95,0.99
+        event.process.time: 0.5,0.95,0.99
       percentile-histogram:
-        tcc.requests.processing.time: true
-        tcc.events.processing.time: true
+        request.process.time: true
+        event.process.time: true
     export:
       cloudwatch:
         enabled: true
@@ -34,3 +34,7 @@ app:
   processing:
     cpu-passes: 6
     enrichment-rounds: 150
+  emf:
+    enabled: true
+    namespace: TccMba
+    flush-interval-ms: 1000

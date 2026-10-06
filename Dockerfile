@@ -12,5 +12,9 @@ RUN apt-get update && \
 COPY --from=builder /app/build/libs/ /app/libs/
 RUN find /app/libs -maxdepth 1 -type f -name '*.jar' ! -name '*-plain.jar' -exec cp {} /app/app.jar \;
 
+# Local EMF sink writes JSON to stdout; awslogs driver extracts metrics into CloudWatch.
+ENV AWS_EMF_ENVIRONMENT=Local
+ENV AWS_EMF_SERVICE_NAME=backend
+
 EXPOSE 8080
 ENTRYPOINT ["java","-jar","/app/app.jar"]

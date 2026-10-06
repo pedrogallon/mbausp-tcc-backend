@@ -18,13 +18,11 @@ AWS_REGION = "sa-east-1"
 DEFAULT_RUNS = 5
 GAP_BETWEEN_RUNS_SEC = 5 * 60
 
-
 def log(message: str) -> None:
     line = f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] {message}"
     print(line, flush=True)
     with LOG_FILE.open("a", encoding="utf-8") as fh:
         fh.write(line + "\n")
-
 
 def strip_aws_keys(env: dict) -> dict:
     cleaned = dict(env)
@@ -39,7 +37,6 @@ def strip_aws_keys(env: dict) -> dict:
     cleaned["AWS_REGION"] = AWS_REGION
     return cleaned
 
-
 def ensure_aws_login(env: dict) -> None:
     cli_env = strip_aws_keys(env)
     subprocess.check_output(
@@ -47,7 +44,6 @@ def ensure_aws_login(env: dict) -> None:
         text=True,
         env=cli_env,
     )
-
 
 def write_aws_creds_file(env: dict) -> None:
     cli_env = strip_aws_keys(env)
@@ -73,14 +69,12 @@ def write_aws_creds_file(env: dict) -> None:
     }
     AWS_CREDS_FILE.write_text(json.dumps(payload), encoding="utf-8")
 
-
 def sleep_seconds(seconds: int, reason: str) -> None:
     if seconds <= 0:
         return
     until = datetime.now() + timedelta(seconds=seconds)
     log(f"Sleeping {seconds // 60}m ({reason}) until {until.strftime('%H:%M:%S')}")
     time.sleep(seconds)
-
 
 def run_k6(type_name: str, profile_name: str, run_index: int, runs: int, env: dict) -> int:
     run_env = strip_aws_keys(env)
@@ -123,7 +117,6 @@ def run_k6(type_name: str, profile_name: str, run_index: int, runs: int, env: di
         if type_name == "event":
             AWS_CREDS_FILE.unlink(missing_ok=True)
 
-
 def parse_args() -> argparse.Namespace:
     profiles = []
     if PROFILES_FILE.exists():
@@ -158,7 +151,6 @@ def parse_args() -> argparse.Namespace:
         help="Minutes to wait between runs (default: 5)",
     )
     return parser.parse_args()
-
 
 def main() -> int:
     args = parse_args()
@@ -214,7 +206,6 @@ def main() -> int:
         log(f"  {mark} run={r['run']} code={r['exit_code']}")
     log("=" * 72)
     return 0 if fail == 0 else 1
-
 
 if __name__ == "__main__":
     raise SystemExit(main())

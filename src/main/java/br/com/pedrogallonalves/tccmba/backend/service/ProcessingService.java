@@ -1,4 +1,6 @@
 package br.com.pedrogallonalves.tccmba.backend.service;
+
+import br.com.pedrogallonalves.tccmba.backend.metrics.EmfProcessTimePublisher;
 import br.com.pedrogallonalves.tccmba.backend.model.ProcessingRequest;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
@@ -17,6 +19,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDateTime;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
@@ -25,7 +29,9 @@ public class ProcessingService {
 
     private final DynamoDbClient dynamoDbClient;
     private final MeterRegistry meterRegistry;
+    private final EmfProcessTimePublisher emfProcessTimePublisher;
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ConcurrentHashMap<String, Timer> processingTimers = new ConcurrentHashMap<>();
 
     @Value("${aws.dynamodb.table-name}")
     private String TABLE_NAME;
@@ -36,39 +42,44 @@ public class ProcessingService {
     @Value("${app.processing.enrichment-rounds:80}")
     private int enrichmentRounds;
 
-    public ProcessingRequest processRequest(String inputData, String source) {
-        log.debug("Starting processing (source={}, bytes={})", source, inputData != null ? inputData.length() : 0);
-
-        meterRegistry.counter(String.format("tcc.%s.processed.total", source)).increment();
-
-        Timer timer = Timer.builder(String.format("tcc.%s.processing.time", source))
+    private Timer processingTimer(String source) {
+        return processingTimers.computeIfAbsent(source, key -> Timer.builder(key + ".process.time")
                 .description("Time taken to process a request/event")
                 .publishPercentiles(0.5, 0.95, 0.99)
                 .publishPercentileHistogram(true)
-                .register(meterRegistry);
+                .register(meterRegistry));
+    }
 
-        return timer.record(() -> {
-            try {
-                ProcessingRequest request = ProcessingRequest.newRequest(inputData, source);
+    public ProcessingRequest processRequest(String inputData, String source) {
+        log.debug("Starting processing (source={}, bytes={})", source, inputData != null ? inputData.length() : 0);
 
-                String fingerprint = simulateBusinessWork(inputData, source);
+        meterRegistry.counter(String.format("%s.process.total", source)).increment();
 
-                request.setResult("Processed:" + fingerprint);
-                request.setStatus("COMPLETED");
-                request.setProcessedAt(LocalDateTime.now());
+        long startNanos = System.nanoTime();
+        try {
+            ProcessingRequest request = ProcessingRequest.newRequest(inputData, source);
 
-                saveRequestToDynamoDB(request);
+            String fingerprint = simulateBusinessWork(inputData, source);
 
-                meterRegistry.counter(String.format("tcc.%s.processed.success", source)).increment();
-                log.debug("Request processed successfully: {} (source={})", request.getRequestId(), source);
+            request.setResult("Processed:" + fingerprint);
+            request.setStatus("COMPLETED");
+            request.setProcessedAt(LocalDateTime.now());
 
-                return request;
-            } catch (Exception e) {
-                meterRegistry.counter(String.format("tcc.%s.processed.error", source)).increment();
-                log.error("Error processing request", e);
-                throw new RuntimeException("Error processing request", e);
-            }
-        });
+            saveRequestToDynamoDB(request);
+
+            meterRegistry.counter(String.format("%s.process.success", source)).increment();
+            log.debug("Request processed successfully: {} (source={})", request.getRequestId(), source);
+
+            return request;
+        } catch (Exception e) {
+            meterRegistry.counter(String.format("%s.process.error", source)).increment();
+            log.error("Error processing request", e);
+            throw new RuntimeException("Error processing request", e);
+        } finally {
+            long elapsedNanos = System.nanoTime() - startNanos;
+            processingTimer(source).record(elapsedNanos, TimeUnit.NANOSECONDS);
+            emfProcessTimePublisher.record(source, elapsedNanos / 1_000_000.0);
+        }
     }
 
     private String simulateBusinessWork(String inputData, String source) {
@@ -151,7 +162,7 @@ public class ProcessingService {
         }
     }
 
-    public String getDynamoData(String key){
+    public String getDynamoData(String key) {
         try {
             DynamoDbEnhancedClient enhancedClient = DynamoDbEnhancedClient.builder()
                     .dynamoDbClient(dynamoDbClient)

@@ -18,6 +18,6 @@ public class SqsProcessingListener {
     @SqsListener("${aws.sqs.queue-name}")
     public void listen(String message) {
         log.info("Received message: {}", message);
-        processingService.processRequest(message, "events");
+        processingService.processRequest(message, "event");
     }
 }

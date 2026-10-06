@@ -19,6 +19,8 @@ bin/
 
 ### IntelliJ IDEA ###
 .idea
+.cursor
+.gradle
 *.iws
 *.iml
 *.ipr
